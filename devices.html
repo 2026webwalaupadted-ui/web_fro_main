@@ -177,6 +177,61 @@ body {
   font-size: 14px;
 }
 
+/* ===== INFINITY LOOP TEXT ANIMATION ===== */
+.infinity-loop-container {
+  background: linear-gradient(135deg, #88d7fe, #24d0fb);
+  padding: 12px 0;
+  overflow: hidden;
+  position: relative;
+  border-bottom: 2px solid #003a59;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.infinity-loop-wrapper {
+  display: flex;
+  width: max-content;
+  animation: scrollText 20s linear infinite;
+}
+
+.infinity-loop-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-right: 40px;
+  white-space: nowrap;
+}
+
+.infinity-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.infinity-text i {
+  color: #dc2626;
+  animation: bounce 1s infinite;
+}
+
+@keyframes scrollText {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
 
 .nav {
   background: white;
@@ -1312,6 +1367,10 @@ body {
     min-width: 130px;
   }
   
+  .infinity-text {
+    font-size: 12px;
+  }
+  
   .nav {
     top: 56px;
     padding: 5px 0;
@@ -1426,6 +1485,16 @@ body {
     min-width: 120px;
     justify-content: flex-start;
   }
+  
+  .infinity-text {
+    font-size: 11px;
+    gap: 6px;
+  }
+  
+  .infinity-loop-content {
+    gap: 15px;
+    padding-right: 30px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1442,6 +1511,20 @@ body {
   .nav-container,
   .main {
     padding: 0 12px;
+  }
+  
+  .infinity-loop-container {
+    padding: 6px 0;
+  }
+  
+  .infinity-text {
+    font-size: 10px;
+    gap: 5px;
+  }
+  
+  .infinity-loop-content {
+    gap: 10px;
+    padding-right: 20px;
   }
   
   .nav a {
@@ -1648,6 +1731,49 @@ body {
     </div>
   </div>
 </div>
+  </div>
+</div>
+
+<!-- INFINITY LOOP TEXT ANIMATION -->
+<div class="infinity-loop-container">
+  <div class="infinity-loop-wrapper">
+    <div class="infinity-loop-content">
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+       Welcome to our service!
+      </div>
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+       Welcome to our service!
+      </div>
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+       Welcome to our service!
+      </div>
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+       Welcome to our service!
+      </div>
+    </div>
+    <!-- Duplicate for seamless loop -->
+    <div class="infinity-loop-content">
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+        Temporary Facing Some Issues • Will Fix Till Tomorrow
+      </div>
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+        Temporary Facing Some Issues • Will Fix Till Tomorrow
+      </div>
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+        Temporary Facing Some Issues • Will Fix Till Tomorrow
+      </div>
+      <div class="infinity-text">
+        <i class="fas fa-exclamation-circle"></i>
+        Temporary Facing Some Issues • Will Fix Till Tomorrow
+      </div>
+    </div>
   </div>
 </div>
 
