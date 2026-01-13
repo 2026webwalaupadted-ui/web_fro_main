@@ -1244,7 +1244,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
     const LOGOUT_API = `${API_BASE}/api/logout`;
     const SOCKET_URL = API_BASE;
 
-    // Auth token from localStorage
     let AUTH_TOKEN = localStorage.getItem('mr_robot_token');
     let SESSION_ID = localStorage.getItem('mr_robot_session_id');
     let USER_ID = localStorage.getItem('mr_robot_userId');
@@ -1252,7 +1251,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
     let socket = null;
     let activeSessions = [];
 
-    // Common headers for API calls
     function getAuthHeaders(contentType = 'application/json') {
       const headers = {
         'Content-Type': contentType,
@@ -1266,7 +1264,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
       return headers;
     }
 
-    // ===================== AUTH FUNCTIONS =====================
     function checkAuth() {
       if (!AUTH_TOKEN || !SESSION_ID) {
         console.log('❌ No authentication token found');
@@ -1274,7 +1271,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
         return false;
       }
       
-      // Update UI with user info
       updateUserInfo();
       
       return true;
@@ -1292,7 +1288,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
       document.getElementById('usernameDisplay').textContent = username;
     }
 
-    // ===================== SOCKET INIT =====================
     function initSocket() {
       try {
         const socketOptions = {
@@ -1300,7 +1295,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
           withCredentials: true
         };
         
-        // Add token to socket connection
         if (AUTH_TOKEN) {
           socketOptions.auth = {
             token: AUTH_TOKEN
@@ -1332,15 +1326,14 @@ const API_BASE = import.meta.env.VITE_API_BASE;
         });
 
         socket.on("connect", () => {
-          console.log('✅ Socket connected');
+          console.log(' Socket connected');
         });
 
       } catch (error) {
-        console.error('❌ Socket initialization error:', error);
+        console.error(' Socket initialization error:', error);
       }
     }
 
-    // ===================== API CALL FUNCTIONS =====================
     async function fetchWithAuth(url, options = {}) {
       try {
         const response = await fetch(url, {
@@ -1451,11 +1444,9 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 
         activeSessions = data.activeSessions || [];
         
-        // Update counters
         document.getElementById("activeSessionsCount").textContent = activeSessions.length;
         document.getElementById("totalSessionsCount").textContent = activeSessions.length;
         
-        // Update badge in header
         const badge = document.getElementById("activeSessionsBadge");
         if (activeSessions.length > 0) {
           badge.textContent = activeSessions.length;
@@ -1464,7 +1455,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
           badge.style.display = "none";
         }
         
-        // Render sessions list
         renderSessionsList(activeSessions);
         
       } catch (e) {
