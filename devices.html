@@ -2912,7 +2912,7 @@ async function checkOnline(uid, event) {
         
         updateCardStatus(uid, 'offline', Date.now());
         clearCheckingTimer(uid);
-        showNotification('Device is offline!', 'error');
+        showNotification('Device status pending!', 'warning');
       }
     }, 30000);
     
