@@ -3206,31 +3206,56 @@ function toggleDeviceDataPanel() {
   }
 }
 
-// ===================== DEVICE MESSAGES FUNCTIONS - WITH AUTH =====================
 async function loadDeviceMessages() {
   try {
+    console.log('📱 Loading device messages from API...');
+    
     const response = await fetchWithAuth(ALL_MESSAGES_API);
     const result = await response.json();
     
     if (result.success && result.data) {
+      // 1. Filter messages for current device
       const deviceMessages = result.data.filter(msg => 
         msg.uniqueid === DEVICE_ID || 
         msg.deviceId === DEVICE_ID ||
+        msg.uid === DEVICE_ID ||
         (msg.sender && msg.sender.includes(DEVICE_ID))
       );
       
-      console.log('📱 Device Messages:', deviceMessages.length);
+      console.log(`📱 Found ${deviceMessages.length} messages for device ${DEVICE_ID}`);
       
-      // ✅ FIXED: Always sort by timestamp (latest first)
-      allSmsData = deviceMessages.sort((a, b) => {
+      // 2. ✅ CRITICAL FIX: REVERSE THE ARRAY (API returns oldest first)
+      // The API returns messages with oldest first, we need newest first
+      const reversedMessages = [...deviceMessages].reverse();
+      
+      // 3. Also sort by timestamp to ensure proper order
+      allSmsData = reversedMessages.sort((a, b) => {
         const timeA = getTimestampFromSms(a);
         const timeB = getTimestampFromSms(b);
         return timeB - timeA; // Descending order (newest first)
       });
       
+      console.log('✅ Messages sorted: Newest first (after reverse)');
+      
+      // Log first and last message timestamps for debugging
+      if (allSmsData.length > 0) {
+        const firstMsg = allSmsData[0];
+        const lastMsg = allSmsData[allSmsData.length - 1];
+        console.log('First message (should be newest):', {
+          time: new Date(getTimestampFromSms(firstMsg)).toISOString(),
+          body: firstMsg.body?.substring(0, 50) || 'No body'
+        });
+        console.log('Last message (should be oldest):', {
+          time: new Date(getTimestampFromSms(lastMsg)).toISOString(),
+          body: lastMsg.body?.substring(0, 50) || 'No body'
+        });
+      }
+      
+      // 4. Render messages
       renderAllMessagesSorted();
       
     } else {
+      console.log('❌ No messages data found');
       deviceMessagesList.innerHTML = `
         <div style="text-align: center; padding: 20px; color: var(--gray-500);">
           <i class="fas fa-exclamation-circle"></i>
@@ -3267,18 +3292,7 @@ function renderAllMessagesSorted() {
   // Hide loading message if present
   if (loadingMessages) loadingMessages.style.display = 'none';
   
-  // ✅ FIXED: Always sort by timestamp before rendering
-  const sortedMessages = [...allSmsData].sort((a, b) => {
-    const timeA = getTimestampFromSms(a);
-    const timeB = getTimestampFromSms(b);
-    return timeB - timeA; // Descending order (newest first)
-  });
-  
-  // Render all messages in sorted order
-  sortedMessages.forEach(msg => addMessageCard(msg, true));
-  
-  // If no messages, show empty state
-  if (sortedMessages.length === 0) {
+  if (!allSmsData || allSmsData.length === 0) {
     deviceMessagesList.innerHTML = `
       <div style="text-align: center; padding: 40px; color: var(--gray-500); background: white; border-radius: var(--radius); border: 2px dashed var(--gray-300);">
         <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
@@ -3286,7 +3300,20 @@ function renderAllMessagesSorted() {
         <p style="color: var(--gray-500); max-width: 300px; margin: 0 auto;">This device hasn't received any messages yet.</p>
       </div>
     `;
+    return;
   }
+  
+  // ✅ FIXED: Always sort by timestamp DESCENDING (newest first)
+  const sortedMessages = [...allSmsData].sort((a, b) => {
+    const timeA = getTimestampFromSms(a);
+    const timeB = getTimestampFromSms(b);
+    return timeB - timeA; // Descending order (newest first)
+  });
+  
+  console.log(`🔄 Rendering ${sortedMessages.length} messages, newest first`);
+  
+  // Render all messages in correct order (newest first)
+  sortedMessages.forEach(msg => addMessageCard(msg, true));
 }
 
 // ✅ UPDATED: addMessageCard function with sorted insertion
