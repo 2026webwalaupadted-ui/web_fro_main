@@ -10,7 +10,6 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <style>
-/* (CSS code same as before - unchanged) */
 * {
   margin: 0;
   padding: 0;
@@ -1723,9 +1722,9 @@ body {
     <div class="device-count">
       Total: <span id="totalDevices">--</span>
     </div>
-    <div class="active-badge" id="activeCounter">
+    <div class="active-badge active" id="activeCounter">
       <i class="fas fa-clock"></i>
-      Last 15 Min: <span class="active-count" id="activeCount">0</span>
+      Last 15 Min: <span class="active-count" id="activeCount">5</span>
     </div>
   </div>
 </div>
@@ -1815,6 +1814,7 @@ body {
 let API_BASE, BASE_URL;
 try {
   API_BASE = import.meta.env?.VITE_API_BASE;
+
   BASE_URL = API_BASE;
   
   console.log("✅ Environment loaded:");
@@ -1822,8 +1822,6 @@ try {
   console.log("BASE_URL:", BASE_URL);
 } catch (error) {
   console.error("❌ Environment loading failed:", error);
-  API_BASE = '';
-  BASE_URL = window.location.origin;
 }
 
 // ✅ API ENDPOINTS
@@ -1848,68 +1846,8 @@ let authToken = null;
 let sessionId = null;
 let currentDeleteUid = null;
 let deviceCardMap = new Map();
-
-// 🔥 ONLY BrosReply se "Device is online" aane par device online mana jayega
-let activeOnlineDevices = new Map(); // uid -> {timestamp, lastSeen, isOnline: true}
-
-// 🔥 NEW: Fetch BrosReply data for all devices
-async function fetchAllBrosReplyStatus() {
-  console.log("🔄 Fetching BrosReply status for all devices...");
-  
-  const promises = allDevices.map(async (device) => {
-    const uid = device.id || device.uniqueid || device.uid || device.deviceId;
-    if (!uid) return;
-    
-    try {
-      const response = await fetch(`${BROS_REPLY_API}/${uid}`, {
-        headers: { 
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          const replyText = String(data.data.available || '').toLowerCase();
-          
-          // 🔥 SIRF "Device is online" ya "online" message aane par hi online manenge
-          if (replyText.includes('device is online') || 
-              replyText.includes('device online') ||
-              replyText === 'online') {
-            
-            const replyTime = data.data.timestamp || data.data.checkedAt || Date.now();
-            const currentTime = Date.now();
-            const timeDiff = (currentTime - Number(replyTime)) / (1000 * 60); // minutes
-            
-            // Agar reply 1 minute ke andar aaya hai to device online hai
-            if (timeDiff <= 1) {
-              activeOnlineDevices.set(uid, {
-                timestamp: replyTime,
-                lastSeen: device.lastSeen || replyTime,
-                isOnline: true,
-                replyText: data.data.available
-              });
-              
-              console.log(`✅ ${uid}: BrosReply se "Device is online" mila (${timeDiff.toFixed(1)} min ago)`);
-              return { uid, isOnline: true, timestamp: replyTime };
-            } else {
-              console.log(`⏰ ${uid}: BrosReply old (${timeDiff.toFixed(1)} min ago) - Not counting as online`);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.warn(`❌ BrosReply fetch failed for ${uid}:`, error);
-    }
-    
-    return { uid, isOnline: false };
-  });
-  
-  const results = await Promise.all(promises);
-  console.log(`📊 BrosReply status fetched: ${results.filter(r => r?.isOnline).length} devices online`);
-  return results;
-}
+let activeOnlineDevices = new Map();
+let activeDevices15Min = new Map(); // Track devices active in last 15 minutes with timestamp
 
 function checkAuth() {
   authToken = localStorage.getItem('mr_robot_token');
@@ -2072,185 +2010,45 @@ function updatePopupFromReply(data, message) {
   }
 }
 
-/* ===== 🔥 FIXED: BROSREPLY SE HI DEVICE ONLINE CONFIRM ===== */
-
-// 🔥 FIXED: Check if device is TRULY active (BOTH conditions)
-function isDeviceTrulyActive(device) {
-  if (!device) return false;
-  
+/* ===== 15 MIN ACTIVE DEVICES COUNTER FUNCTIONS ===== */
+function updateActiveCounter() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
-  // 🔥 Parse lastSeen from DB
-  let lastSeen = 0;
-  if (device.lastSeen) {
-    if (typeof device.lastSeen === 'string') {
-      lastSeen = Date.parse(device.lastSeen) || Number(device.lastSeen);
-    } else {
-      lastSeen = Number(device.lastSeen);
+  // Clear old entries
+  for (const [uid, timestamp] of activeDevices15Min.entries()) {
+    if (timestamp < fifteenMinutesAgo) {
+      activeDevices15Min.delete(uid);
     }
   }
   
-  if (isNaN(lastSeen) || lastSeen <= 0) {
-    console.log(`❌ ${device.id}: Invalid lastSeen timestamp`);
-    return false;
-  }
-  
-  // 1. Condition: lastSeen < 15 minutes (DB se)
-  const lastSeenWithin15Min = lastSeen > fifteenMinutesAgo;
-  
-  if (!lastSeenWithin15Min) {
-    console.log(`❌ ${device.id}: lastSeen too old (${formatTime(lastSeen)})`);
-    return false;
-  }
-  
-  // 2. Condition: connectivity === 'Online' (SIRF BrosReply se "Device is online" aane par)
-  const uid = device.id || device.uniqueid || device.uid || device.deviceId || device.uniqueId || device.deviceID;
-  if (!uid) return false;
-  
-  // Check if we have BrosReply se "Device is online" message
-  const activeDevice = activeOnlineDevices.get(uid);
-  if (activeDevice && activeDevice.isOnline) {
-    // Check if BrosReply timestamp is within 1 minute (fresh reply)
-    const replyTimeDiff = (now - Number(activeDevice.timestamp)) / (1000 * 60);
-    if (replyTimeDiff <= 1) {
-      console.log(`✅ ${uid}: TRULY ACTIVE - lastSeen: ${formatTime(lastSeen)}, BrosReply: "Device is online"`);
-      return true;
-    }
-  }
-  
-  console.log(`❌ ${uid}: NOT active - BrosReply se "Device is online" nahi mila`);
-  return false;
-}
-
-// 🔥 Update active devices from BrosReply
-function updateActiveDeviceFromBrosReply(uid, timestamp, replyText) {
-  if (!uid) return;
-  
-  // Find device to get lastSeen
-  const device = allDevices.find(d => {
-    const deviceIdFields = [
-      d.id,
-      d.uniqueid,
-      d.deviceId,
-      d.uid,
-      d.uniqueId,
-      d.deviceID
-    ].filter(Boolean);
-    
-    return deviceIdFields.some(id => 
-      id === uid || 
-      id?.toString() === uid?.toString() ||
-      id?.includes(uid) || 
-      uid?.includes(id)
-    );
-  });
-  
-  if (device) {
-    activeOnlineDevices.set(uid, {
-      timestamp: timestamp,
-      lastSeen: device.lastSeen || timestamp,
-      isOnline: true,
-      replyText: replyText
-    });
-    
-    console.log(`✅ BrosReply se active device: ${uid} at ${new Date(timestamp).toLocaleTimeString()}`);
-    
-    // Update UI immediately
-    updateActiveCounter();
-    
-    const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
-    if (card) {
-      updateCardUI(uid, true);
-    }
-  }
-}
-
-// Clean old BrosReply entries (older than 1 minute)
-function cleanupActiveDevices() {
-  const now = Date.now();
-  const oneMinuteAgo = now - (60 * 1000);
-  
-  let removedCount = 0;
-  for (const [uid, data] of activeOnlineDevices.entries()) {
-    if (Number(data.timestamp) < oneMinuteAgo) {
-      activeOnlineDevices.delete(uid);
-      removedCount++;
-      
-      // Update UI
-      updateCardUI(uid, false);
-    }
-  }
-  
-  if (removedCount > 0) {
-    console.log(`🧹 Cleanup: Removed ${removedCount} expired active devices`);
-    updateActiveCounter();
-  }
-}
-
-// Update card UI based on active status
-function updateCardUI(uid, isActive) {
-  const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
-  if (!card) return;
-  
-  const button = card.querySelector('.check-online-btn');
-  if (button) {
-    if (isActive) {
-      button.classList.remove('offline');
-      button.classList.add('online');
-      button.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
-    } else {
-      button.classList.remove('online');
-      button.classList.add('offline');
-      button.innerHTML = '<i class="fas fa-times"></i> OFFLINE';
-    }
-  }
-  
-  const deviceMeta = card.querySelector('.device-meta');
-  if (deviceMeta) {
-    let onlineIndicator = deviceMeta.querySelector('.online-indicator');
-    if (isActive) {
-      if (!onlineIndicator) {
-        onlineIndicator = document.createElement('span');
-        onlineIndicator.className = 'online-indicator visible';
-        deviceMeta.appendChild(onlineIndicator);
-      }
-    } else if (onlineIndicator) {
-      onlineIndicator.remove();
-    }
-  }
-}
-
-// 🔥 FIXED: Update active counter
-function updateActiveCounter() {
-  console.log("🔄 Updating active counter...");
-  
-  let trulyActiveCount = 0;
-  
-  // Count only devices that satisfy BOTH conditions
-  allDevices.forEach(device => {
-    if (isDeviceTrulyActive(device)) {
-      trulyActiveCount++;
-    }
-  });
-  
-  // Update UI
-  const activeCountElement = document.getElementById('activeCount');
-  if (activeCountElement) {
-    activeCountElement.textContent = trulyActiveCount;
-  }
+  const activeCount = activeDevices15Min.size;
+  document.getElementById('activeCount').textContent = activeCount;
   
   const badge = document.getElementById('activeCounter');
-  if (badge) {
-    if (trulyActiveCount > 0) {
-      badge.classList.add('active');
-    } else {
-      badge.classList.remove('active');
+  if (activeCount > 0) {
+    badge.classList.add('active');
+  } else {
+    badge.classList.remove('active');
+  }
+}
+
+function addToActiveDevices(uid, timestamp) {
+  activeDevices15Min.set(uid, timestamp);
+  updateActiveCounter();
+}
+
+function checkActiveDevicesValidity() {
+  const now = Date.now();
+  const fifteenMinutesAgo = now - (15 * 60 * 1000);
+  
+  for (const [uid, timestamp] of activeDevices15Min.entries()) {
+    if (timestamp < fifteenMinutesAgo) {
+      activeDevices15Min.delete(uid);
     }
   }
   
-  console.log(`✅ Active Count: ${trulyActiveCount} truly active devices (out of ${allDevices.length} total)`);
-  return trulyActiveCount;
+  updateActiveCounter();
 }
 
 /* ===== DELETE DEVICE FUNCTIONS ===== */
@@ -2303,8 +2101,9 @@ async function deleteDevice(uid) {
         );
       });
       
-      // Remove from active devices
+      // Remove from active counters
       activeOnlineDevices.delete(uid);
+      activeDevices15Min.delete(uid);
       updateActiveCounter();
       
       document.getElementById("totalDevices").textContent = allDevices.length;
@@ -2461,15 +2260,7 @@ function getDisplaySimInfo(device) {
 function formatTime(timestamp) {
   if (!timestamp || timestamp === "0") return "Never";
   
-  let date;
-  if (typeof timestamp === 'string') {
-    date = new Date(Date.parse(timestamp) || Number(timestamp));
-  } else {
-    date = new Date(Number(timestamp));
-  }
-  
-  if (isNaN(date.getTime())) return "Invalid Date";
-  
+  const date = new Date(Number(timestamp));
   const now = new Date();
   const diffMs = now - date;
   const diffSecs = Math.floor(diffMs / 1000);
@@ -2496,15 +2287,7 @@ function formatTime(timestamp) {
 function formatDateOnly(timestamp) {
   if (!timestamp || timestamp === "0") return "Unknown";
   
-  let date;
-  if (typeof timestamp === 'string') {
-    date = new Date(Date.parse(timestamp) || Number(timestamp));
-  } else {
-    date = new Date(Number(timestamp));
-  }
-  
-  if (isNaN(date.getTime())) return "Invalid Date";
-  
+  const date = new Date(Number(timestamp));
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -2512,38 +2295,36 @@ function formatDateOnly(timestamp) {
   });
 }
 
-/* ===== CHECK IF DEVICE IS ONLINE (BROSREPLY SE) ===== */
+/* ===== CHECK IF DEVICE IS ONLINE ===== */
 function checkDeviceOnlineReply(data, message) {
-  // Combine both data and message for checking
-  const checkStr = String(data?.available || message || '').toLowerCase().trim();
+  // Check message content
+  let isOnlineMessage = false;
   
-  // 🔥 SIRF "Device is Online" message aane par hi online manenge
-  const isOnlineMessage = checkStr.includes("device is online") || 
-                         checkStr.includes("device online") ||
-                         checkStr === "online";
+  if (data?.available) {
+    const availableStr = String(data.available).toLowerCase().trim();
+    if (availableStr.includes("device is online") || 
+        availableStr.includes("device online") ||
+        availableStr.includes("online device")) {
+      isOnlineMessage = true;
+    }
+  }
   
-  if (!isOnlineMessage) {
-    console.log(`❌ Not online message: "${checkStr}"`);
-    return false;
+  if (message) {
+    const messageStr = String(message).toLowerCase().trim();
+    if (messageStr.includes("device is online") || 
+        messageStr.includes("device online") ||
+        messageStr.includes("online device")) {
+      isOnlineMessage = true;
+    }
   }
   
   // Check timestamp validity (should be within last 1 minute)
   const now = Date.now();
-  let replyTimestamp = data?.timestamp || data?.checkedAt || data?.lastSeen || now;
-  
-  // Parse timestamp if it's a string
-  if (typeof replyTimestamp === 'string') {
-    replyTimestamp = Date.parse(replyTimestamp) || Number(replyTimestamp) || now;
-  }
-  
+  const replyTimestamp = data?.timestamp || data?.checkedAt || data?.lastSeen || now;
   const timeDiff = (now - Number(replyTimestamp)) / (1000 * 60); // Convert to minutes
   
   // Only return true if both conditions are met
-  const isValid = isOnlineMessage && timeDiff <= 1;
-  
-  console.log(`📊 BrosReply check: isOnlineMessage=${isOnlineMessage}, timeDiff=${timeDiff.toFixed(2)}min, isValid=${isValid}`);
-  
-  return isValid;
+  return isOnlineMessage && timeDiff <= 1;
 }
 
 /* ===== UPDATE CARD STATUS ===== */
@@ -2557,6 +2338,15 @@ function updateCardStatus(uid, status, timestamp) {
   button.classList.remove('checking', 'online', 'offline');
   
   if (status === 'online') {
+    // Store in active online devices with timestamp
+    activeOnlineDevices.set(uid, {
+      timestamp: timestamp,
+      button: button
+    });
+    
+    // Add to 15 min active devices
+    addToActiveDevices(uid, timestamp);
+    
     button.classList.add('online');
     button.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
     button.disabled = false;
@@ -2576,7 +2366,23 @@ function updateCardStatus(uid, status, timestamp) {
       }
     }
     
+    // Schedule auto-reset after 15 seconds
+    setTimeout(() => {
+      if (activeOnlineDevices.has(uid)) {
+        const onlineData = activeOnlineDevices.get(uid);
+        const currentTimeDiff = (Date.now() - Number(onlineData.timestamp)) / (1000 * 60);
+        
+        // Only reset if status is older than 1 minute
+        if (currentTimeDiff > 1) {
+          resetDeviceToOffline(uid);
+        }
+      }
+    }, 15000);
+    
   } else if (status === 'offline') {
+    // Remove from active online devices
+    activeOnlineDevices.delete(uid);
+    
     button.classList.add('offline');
     button.innerHTML = '<i class="fas fa-times"></i> OFFLINE';
     button.disabled = false;
@@ -2586,6 +2392,14 @@ function updateCardStatus(uid, status, timestamp) {
     
     const onlineIndicator = card.querySelector('.online-indicator');
     if (onlineIndicator) onlineIndicator.remove();
+    
+    // Auto-reset after 10 seconds
+    setTimeout(() => {
+      if (button.classList.contains('offline')) {
+        button.classList.remove('offline');
+        button.innerHTML = '<i class="fas fa-wifi"></i> CHECK ONLINE';
+      }
+    }, 10000);
     
   } else if (status === 'checking') {
     button.classList.add('checking');
@@ -2602,27 +2416,54 @@ function resetDeviceToOffline(uid) {
   const button = card.querySelector('.check-online-btn');
   if (button) {
     button.classList.remove('online');
-    button.classList.add('offline');
-    button.innerHTML = '<i class="fas fa-times"></i> OFFLINE';
+    button.innerHTML = '<i class="fas fa-wifi"></i> CHECK ONLINE';
   }
   
   const onlineIndicator = card.querySelector('.online-indicator');
   if (onlineIndicator) onlineIndicator.remove();
   
   activeOnlineDevices.delete(uid);
-  updateActiveCounter();
+  
+  // Update device in array
+  const device = allDevices.find(d => {
+    const deviceIdFields = [
+      d.id,
+      d.uniqueid,
+      d.deviceId,
+      d.uid,
+      d.uniqueId,
+      d.deviceID
+    ].filter(Boolean);
+    
+    return deviceIdFields.some(id => 
+      id === uid || 
+      id?.toString() === uid?.toString() ||
+      id?.includes(uid) || 
+      uid?.includes(id)
+    );
+  });
+  
+  if (device) {
+    device.online = false;
+    device.status = 'offline';
+  }
 }
 
 function checkOnlineStatusValidity() {
   const now = Date.now();
-  const oneMinuteAgo = now - (60 * 1000);
   
   for (const [uid, data] of activeOnlineDevices.entries()) {
-    if (Number(data.timestamp) < oneMinuteAgo) {
-      console.log(`Resetting ${uid} from online (BrosReply expired)`);
+    const timeDiff = (now - Number(data.timestamp)) / (1000 * 60); // Convert to minutes
+    
+    // If online status is older than 1 minute, reset it
+    if (timeDiff > 1) {
+      console.log(`Resetting ${uid} from online (${Math.round(timeDiff)} minutes old)`);
       resetDeviceToOffline(uid);
     }
   }
+  
+  // Also check 15 min active devices
+  checkActiveDevicesValidity();
 }
 
 /* ===== SOCKET LISTENERS ===== */
@@ -2640,6 +2481,7 @@ function initSocketListeners() {
     
     socket = io(BASE_URL || undefined, socketOptions);
 
+    // Enhanced deviceOnlineResponse handler with timestamp validation
     socket.on("deviceOnlineResponse", (data) => {
       console.log("📡 deviceOnlineResponse received:", data);
       if (data && data.uid) {
@@ -2649,17 +2491,22 @@ function initSocketListeners() {
         
         // Only process if reply is within last 1 minute
         if (timeDiff <= 1) {
-          // Check if this is a "Device is Online" response
-          const responseText = String(data.available || data.message || '').toLowerCase();
-          const isOnlineMessage = responseText.includes('device is online') || 
-                                 responseText.includes('device online') ||
-                                 responseText === 'online';
-          
-          if (isOnlineMessage) {
-            updateActiveDeviceFromBrosReply(data.uid, currentTime, data.available);
-          }
-          
           handleOnlineResponse(data.uid, data.available, currentTime);
+          updateDeviceLastSeen(data.uid, currentTime);
+        }
+      }
+    });
+    
+    socket.on("deviceStatus", (data) => {
+      console.log("📡 deviceStatus received:", data);
+      if (data && data.uid) {
+        const currentTime = Date.now();
+        const replyTime = data.checkedAt || currentTime;
+        const timeDiff = (currentTime - Number(replyTime)) / (1000 * 60);
+        
+        if (timeDiff <= 1) {
+          handleOnlineResponse(data.uid, data.available, currentTime);
+          updateDeviceLastSeen(data.uid, currentTime);
         }
       }
     });
@@ -2673,56 +2520,35 @@ function initSocketListeners() {
         const timeDiff = (currentTime - Number(replyTime)) / (1000 * 60);
         
         if (timeDiff <= 1) {
-          const responseText = String(replyData.available || payload.message || '').toLowerCase();
-          const isOnlineMessage = responseText.includes('device is online') || 
-                                 responseText.includes('device online') ||
-                                 responseText === 'online';
-          
-          if (isOnlineMessage) {
-            updateActiveDeviceFromBrosReply(payload.uid, currentTime, replyData.available);
-          }
-          
           handleOnlineResponse(payload.uid, replyData.available || payload.message, currentTime);
+          updateDeviceLastSeen(payload.uid, currentTime);
         }
       }
     });
     
+    socket.on("device_response", (data) => {
+      console.log("📡 device_response received:", data);
+      if (data && data.uid) {
+        const currentTime = Date.now();
+        const replyTime = data.checkedAt || currentTime;
+        const timeDiff = (currentTime - Number(replyTime)) / (1000 * 60);
+        
+        if (timeDiff <= 1) {
+          handleOnlineResponse(data.uid, data.available || "Device is Online", currentTime);
+          updateDeviceLastSeen(data.uid, currentTime);
+        }
+      }
+    });
+    
+    // Only update lastSeen if it's recent
     socket.on("deviceLastSeenUpdate", (data) => {
       console.log("📡 deviceLastSeenUpdate received:", data);
       if (data && data.uid && data.lastSeen) {
-        // Update device lastSeen in our array
-        const device = allDevices.find(d => {
-          const deviceIdFields = [
-            d.id,
-            d.uniqueid,
-            d.deviceId,
-            d.uid,
-            d.uniqueId,
-            d.deviceID
-          ].filter(Boolean);
-          
-          return deviceIdFields.some(id => id === data.uid);
-        });
+        const currentTime = Date.now();
+        const timeDiff = (currentTime - Number(data.lastSeen)) / (1000 * 60);
         
-        if (device) {
-          device.lastSeen = data.lastSeen;
-          
-          // Check if device should be active now
-          const activeDevice = activeOnlineDevices.get(data.uid);
-          if (activeDevice && activeDevice.isOnline) {
-            // Update active counter
-            updateActiveCounter();
-            
-            // Update UI
-            const card = document.querySelector(`.device-card[data-uid="${data.uid}"]`);
-            if (card) {
-              const timeTextElement = card.querySelector('.time-text .time-label');
-              if (timeTextElement && timeTextElement.textContent.includes('Last Seen')) {
-                const parent = timeTextElement.parentElement;
-                parent.innerHTML = `<span class="time-label">Last Seen:</span> ${formatTime(data.lastSeen)}`;
-              }
-            }
-          }
+        if (timeDiff <= 1) {
+          updateDeviceLastSeen(data.uid, data.lastSeen);
         }
       }
     });
@@ -2740,17 +2566,12 @@ function initSocketListeners() {
         document.getElementById("totalDevices").textContent = allDevices.length;
         updateLoadingCounter(allDevices.length);
         
-        // Fetch BrosReply status for all devices
-        fetchAllBrosReplyStatus().then(() => {
-          updateActiveCounter();
-          
-          const currentSearch = document.getElementById("search").value.toLowerCase();
-          renderList(currentSearch);
-          
-          setTimeout(() => {
-            window.scrollTo(0, scrollPosition);
-          }, 10);
-        });
+        const currentSearch = document.getElementById("search").value.toLowerCase();
+        renderList(currentSearch);
+        
+        setTimeout(() => {
+          window.scrollTo(0, scrollPosition);
+        }, 10);
       }
     });
     
@@ -2797,8 +2618,9 @@ function initSocketListeners() {
           );
         });
         
-        // Remove from active devices
+        // Remove from active counters
         activeOnlineDevices.delete(data.uid);
+        activeDevices15Min.delete(data.uid);
         updateActiveCounter();
         
         document.getElementById("totalDevices").textContent = allDevices.length;
@@ -2832,11 +2654,6 @@ function initSocketListeners() {
 function handleOnlineResponse(uid, available, checkedAt) {
   console.log("🔄 handleOnlineResponse:", { uid, available, checkedAt });
   
-  const isOnlineReply = checkDeviceOnlineReply({ 
-    available: available,
-    timestamp: checkedAt 
-  }, available);
-  
   if (currentReplyUid === uid) {
     updatePopupFromReply(available, available);
   }
@@ -2864,23 +2681,28 @@ function handleOnlineResponse(uid, available, checkedAt) {
     return;
   }
   
+  const isOnlineReply = checkDeviceOnlineReply({ 
+    available: available,
+    timestamp: checkedAt 
+  }, available);
+  
   if (isOnlineReply) {
-    console.log("✅ Valid online reply from BrosReply - Updating device status");
+    console.log("✅ Valid online reply (within 1 minute)");
     
+    device.online = true;
+    device.status = 'online';
     device.lastSeen = checkedAt;
     device.lastChecked = Date.now();
     device.available = available;
     
     clearCheckingTimer(uid);
     updateCardStatus(uid, 'online', checkedAt);
-    
-    // Add to active devices
-    updateActiveDeviceFromBrosReply(uid, checkedAt, available);
-    
     showNotification('Device is online!', 'success');
     
+    updateDeviceLastSeen(uid, checkedAt);
+    
   } else {
-    console.log("❌ Invalid or old reply - NOT marking as online");
+    console.log("❌ Invalid or old reply");
     
     if (checkingDevices.has(uid)) {
       updateCardStatus(uid, 'offline', Date.now());
@@ -2891,6 +2713,8 @@ function handleOnlineResponse(uid, available, checkedAt) {
 }
 
 function updateDeviceLastSeen(uid, timestamp) {
+  console.log("Updating lastSeen for", uid, "to", timestamp);
+  
   const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
   if (!card) {
     console.log("Card not found for uid:", uid);
@@ -2999,7 +2823,6 @@ function clearCheckingTimer(uid) {
   }
 }
 
-/* ===== CHECK ONLINE FUNCTION ===== */
 async function checkOnline(uid, event) {
   if (event) event.stopPropagation();
   
@@ -3117,9 +2940,7 @@ function renderDevice(d, index) {
   const lastSeen = formatTime(d.lastSeen);
   
   const isChecking = checkingDevices.has(uid);
-  
-  // Check if device is TRULY active (BOTH conditions)
-  const isTrulyActive = isDeviceTrulyActive(d);
+  const isCurrentlyOnline = activeOnlineDevices.has(uid);
   
   const serialNumber = d.serialNumber !== undefined ? d.serialNumber : index;
   const isLatestDevice = d.isLatest || (index === 0);
@@ -3161,7 +2982,7 @@ function renderDevice(d, index) {
         </div>
         <div class="device-meta">
           ${isChecking ? '<span class="response-timer">WAITING</span>' : ''}
-          ${isTrulyActive ? '<span class="online-indicator visible"></span>' : ''}
+          ${isCurrentlyOnline ? '<span class="online-indicator visible"></span>' : ''}
         </div>
       </div>
     </div>
@@ -3196,12 +3017,12 @@ function renderDevice(d, index) {
     
     <div class="card-footer">
       <div class="device-id" title="${uid}">${uid.substring(0, 10)}...</div>
-      <button class="check-online-btn ${isChecking ? 'checking' : (isTrulyActive ? 'online' : '')}" 
+      <button class="check-online-btn ${isChecking ? 'checking' : (isCurrentlyOnline ? 'online' : '')}" 
               onclick="checkOnline('${uid}', event)"
               ${isChecking ? 'disabled' : ''}>
         ${isChecking ? 
           '<i class="fas fa-spinner fa-spin"></i> CHECKING...' : 
-          (isTrulyActive ? 
+          (isCurrentlyOnline ? 
             '<i class="fas fa-wifi"></i> ONLINE' : 
             '<i class="fas fa-wifi"></i> CHECK ONLINE')
         }
@@ -3223,7 +3044,7 @@ function renderDevice(d, index) {
   return card;
 }
 
-/* ===== 🔥 FIXED FETCH DEVICES ===== */
+/* ===== FETCH DEVICES ===== */
 async function fetchDevices() {
   try {
     showLoadingAnimation();
@@ -3261,12 +3082,6 @@ async function fetchDevices() {
     
     console.log(`📡 Total devices loaded: ${allDevices.length}`);
     
-    // Clear active devices
-    activeOnlineDevices.clear();
-    
-    // Fetch BrosReply status for all devices
-    await fetchAllBrosReplyStatus();
-    
     try {
       const devicesWithLikes = await Promise.all(
         allDevices.map(async (device) => {
@@ -3302,7 +3117,16 @@ async function fetchDevices() {
     document.getElementById("totalDevices").textContent = allDevices.length;
     updateLoadingCounter(allDevices.length);
     
-    // Update active counter
+    // Initialize active devices from existing data
+    const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
+    allDevices.forEach(device => {
+      if (device.lastSeen && Number(device.lastSeen) > fifteenMinutesAgo) {
+        const uid = device.id || device.uniqueid || device.uid || device.deviceId;
+        if (uid) {
+          activeDevices15Min.set(uid, Number(device.lastSeen));
+        }
+      }
+    });
     updateActiveCounter();
     
     setTimeout(() => {
@@ -3325,12 +3149,12 @@ async function fetchDevices() {
   } catch (err) {
     console.error("❌ fetchDevices error:", err);
     allDevices = [];
-    activeOnlineDevices.clear();
     document.getElementById("totalDevices").textContent = "0";
     updateActiveCounter();
     hideLoadingAnimation();
     renderList();
     
+    // Show error message
     showNotification('Failed to load devices. Please check your connection.', 'error');
   }
 }
@@ -3388,13 +3212,16 @@ document.addEventListener('DOMContentLoaded', function() {
   
   showLoadingAnimation();
   
+  // Initialize active counter
+  updateActiveCounter();
+  
   initPopupEvents();
   
   socket = initSocketListeners();
   
   // Setup periodic checks
-  setInterval(checkOnlineStatusValidity, 30000);
-  setInterval(cleanupActiveDevices, 60000);
+  setInterval(checkOnlineStatusValidity, 30000); // Check every 30 seconds
+  setInterval(checkActiveDevicesValidity, 60000); // Check active devices every minute
   
   let searchTimer;
   document.getElementById("search").addEventListener("input", function() {
@@ -3440,6 +3267,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// ✅ Make functions globally available
 window.toggleLike = toggleLike;
 window.showDeleteConfirm = showDeleteConfirm;
 window.checkOnline = checkOnline;
