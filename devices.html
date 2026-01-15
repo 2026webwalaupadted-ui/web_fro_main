@@ -1970,9 +1970,11 @@ function updateActiveCounter() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
+  let needsUpdate = false;
   for (const [uid, data] of activeDevices15Min.entries()) {
     if (data.timestamp < fifteenMinutesAgo) {
       activeDevices15Min.delete(uid);
+      needsUpdate = true;
     }
   }
   
@@ -2659,6 +2661,8 @@ function handleOnlineResponse(uid, available, checkedAt) {
     showNotification('Device is online!', 'success');
     
     updateDeviceLastSeen(uid, checkedAt);
+    
+    addToActiveDevices(uid, checkedAt, available);
     
   } else {
     if (checkingDevices.has(uid)) {
