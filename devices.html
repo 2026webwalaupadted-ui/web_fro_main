@@ -1971,6 +1971,7 @@ function updateActiveCounter() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
+  // 15 मिनट से पुराने devices को हटाएं
   for (const [uid, data] of activeDevices15Min.entries()) {
     if (data.timestamp < fifteenMinutesAgo) {
       activeDevices15Min.delete(uid);
@@ -1994,15 +1995,18 @@ function addToActiveDevices(uid, timestamp, availableMessage) {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
+  // अगर timestamp 15 मिनट से पुराना है तो add न करें
   if (timestamp < fifteenMinutesAgo) {
     return false;
   }
   
+  // "checking" message वाले devices को count न करें
   const messageStr = String(availableMessage || '').toLowerCase().trim();
   if (messageStr.includes('checking')) {
     return false;
   }
   
+  // Device को active devices map में add करें
   activeDevices15Min.set(uid, {
     timestamp: timestamp,
     message: availableMessage,
@@ -2017,6 +2021,7 @@ function checkActiveDevicesValidity() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
+  // 15 मिनट से पुराने devices को हटाएं
   for (const [uid, data] of activeDevices15Min.entries()) {
     if (data.timestamp < fifteenMinutesAgo) {
       activeDevices15Min.delete(uid);
@@ -2037,14 +2042,17 @@ async function fetchActiveDevicesFromDB() {
     if (response.ok) {
       const data = await response.json();
       if (data.success && Array.isArray(data.activeDevices)) {
+        // पुराने data को clear करें
         activeDevices15Min.clear();
         
         const now = Date.now();
+        // Database से मिले devices को filter करें
         data.activeDevices.forEach(device => {
           if (device.uid && device.lastSeen) {
             const lastSeen = Number(device.lastSeen);
             const fifteenMinutesAgo = now - (15 * 60 * 1000);
             
+            // केवल 15 मिनट के अंदर वाले devices को add करें
             if (lastSeen > fifteenMinutesAgo) {
               activeDevices15Min.set(device.uid, {
                 timestamp: lastSeen,
@@ -2521,6 +2529,8 @@ function initSocketListeners() {
         
         if (timeDiff <= 1) {
           updateDeviceLastSeen(data.uid, data.lastSeen);
+          
+          // ✅ Active devices counter में update करें
           const fifteenMinutesAgo = currentTime - (15 * 60 * 1000);
           if (data.lastSeen >= fifteenMinutesAgo) {
             activeDevices15Min.set(data.uid, {
@@ -2666,6 +2676,7 @@ function handleOnlineResponse(uid, available, checkedAt) {
     
     updateDeviceLastSeen(uid, checkedAt);
     
+    // ✅ Active devices counter में add करें
     addToActiveDevices(uid, checkedAt, available);
     
   } else {
@@ -3047,6 +3058,7 @@ async function fetchDevices() {
     document.getElementById("totalDevices").textContent = allDevices.length;
     updateLoadingCounter(allDevices.length);
     
+    // ✅ Database से active devices fetch करें
     await fetchActiveDevicesFromDB();
     
     setTimeout(() => {
