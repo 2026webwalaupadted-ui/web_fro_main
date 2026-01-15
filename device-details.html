@@ -3221,13 +3221,12 @@ async function loadDeviceMessages() {
       
       console.log('📱 Device Messages:', deviceMessages.length);
       
-      deviceMessages.sort((a, b) => {
+      // ✅ FIXED: Always sort by timestamp (latest first)
+      allSmsData = deviceMessages.sort((a, b) => {
         const timeA = getTimestampFromSms(a);
         const timeB = getTimestampFromSms(b);
         return timeB - timeA; // Descending order (newest first)
       });
-      
-      allSmsData = deviceMessages;
       
       renderAllMessagesSorted();
       
@@ -3260,7 +3259,7 @@ function getTimestampFromSms(sms) {
   return Date.now();
 }
 
-// ✅ NEW FUNCTION: Render all messages in sorted order
+// ✅ NEW FUNCTION: Render all messages in sorted order (FIXED)
 function renderAllMessagesSorted() {
   // Clear current messages
   deviceMessagesList.innerHTML = '';
@@ -3268,15 +3267,15 @@ function renderAllMessagesSorted() {
   // Hide loading message if present
   if (loadingMessages) loadingMessages.style.display = 'none';
   
-  // Sort all messages by timestamp (newest first)
+  // ✅ FIXED: Always sort by timestamp before rendering
   const sortedMessages = [...allSmsData].sort((a, b) => {
     const timeA = getTimestampFromSms(a);
     const timeB = getTimestampFromSms(b);
-    return timeB - timeA; // Descending order
+    return timeB - timeA; // Descending order (newest first)
   });
   
   // Render all messages in sorted order
-  sortedMessages.forEach(msg => addMessageCard(msg));
+  sortedMessages.forEach(msg => addMessageCard(msg, true));
   
   // If no messages, show empty state
   if (sortedMessages.length === 0) {
@@ -3290,7 +3289,8 @@ function renderAllMessagesSorted() {
   }
 }
 
-function addMessageCard(message) {
+// ✅ UPDATED: addMessageCard function with sorted insertion
+function addMessageCard(message, isBatchRender = false) {
   const container = deviceMessagesList;
   if (!container) return;
   
@@ -3403,7 +3403,41 @@ function addMessageCard(message) {
     });
   }
   
-  container.appendChild(card);
+  // ✅ FIXED: Insert message in correct position based on timestamp
+  const messageTime = getTimestampFromSms(message);
+  
+  if (isBatchRender) {
+    // Batch rendering - just append
+    container.appendChild(card);
+  } else {
+    // Live SMS - insert at correct position
+    const cards = Array.from(container.children);
+    let insertIndex = 0;
+    
+    for (let i = 0; i < cards.length; i++) {
+      const cardTime = getTimestampFromCard(cards[i]);
+      if (messageTime > cardTime) {
+        break;
+      }
+      insertIndex = i + 1;
+    }
+    
+    if (insertIndex >= cards.length) {
+      container.appendChild(card);
+    } else {
+      container.insertBefore(card, cards[insertIndex]);
+    }
+  }
+}
+
+// Helper function to get timestamp from card
+function getTimestampFromCard(card) {
+  const dateElement = card.querySelector('.message-date');
+  if (dateElement) {
+    const dateText = dateElement.textContent;
+    return new Date(dateText).getTime();
+  }
+  return 0;
 }
 
 function isBankingMessage(text) {
@@ -4252,12 +4286,14 @@ function handleLiveSMS(data) {
 
   const exists = allSmsData.some(sms => sms.id === smsId);
   if (!exists) {
+    // ✅ FIXED: Insert at beginning of array (top position)
     allSmsData.unshift(newSms); 
     
+    // ✅ FIXED: Maintain sorting by timestamp
     allSmsData.sort((a, b) => {
       const timeA = getTimestampFromSms(a);
       const timeB = getTimestampFromSms(b);
-      return timeB - timeA;
+      return timeB - timeA; // Descending order (newest first)
     });
     
     liveSmsCount++;
@@ -4265,6 +4301,7 @@ function handleLiveSMS(data) {
   
   updateNotificationBadge(liveSmsCount);
 
+  // ✅ FIXED: Re-render all messages with proper sorting
   renderAllMessagesSorted();
   
   showToast(`📩 New SMS from ${sender}`, 'live');
