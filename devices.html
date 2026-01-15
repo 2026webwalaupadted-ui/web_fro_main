@@ -2013,13 +2013,54 @@ function updatePopupFromReply(data, message) {
   }
 }
 
-/* ===== 🔥 FETCH ALL BROSREPLY DATA ===== */
-async function fetchAllBrosReplyData() {
-  console.log("🔄 Fetching BrosReply data for all devices...");
+/* ===== 🔥 SINGLE DEVICE BROSREPLY FETCH ===== */
+async function fetchSingleBrosReplyData(uid) {
+  console.log(`🔄 Fetching BrosReply data for single device: ${uid}`);
   
   try {
-    // Sabhi devices ke liye BrosReply fetch karo
-    const promises = allDevices.map(async (device) => {
+    const response = await fetch(`${BROS_REPLY_API}/${uid}`, {
+      headers: { 
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.data) {
+        const available = String(data.data.available || '').trim();
+        const checkedAt = Number(data.data.checkedAt) || Number(data.data.timestamp) || Date.now();
+        
+        // BrosReply data store karo
+        brosReplyData.set(uid, {
+          available: available,
+          checkedAt: checkedAt
+        });
+        
+        console.log(`📡 BrosReply for ${uid}: available="${available}", checkedAt=${new Date(checkedAt).toLocaleTimeString()}`);
+        
+        // Active devices recalculate karo
+        calculateActiveDevices();
+        
+        return { uid, available, checkedAt };
+      }
+    }
+  } catch (error) {
+    console.warn(`❌ BrosReply fetch failed for ${uid}:`, error);
+  }
+  
+  return null;
+}
+
+/* ===== 🔥 BULK BROSREPLY FETCH (ONLY FOR REFRESH) ===== */
+async function fetchBulkBrosReplyData() {
+  console.log("🔄 Bulk fetching BrosReply data for all devices (REFRESH)...");
+  
+  try {
+    // Sirf first 20 devices ke liye bulk fetch (performance ke liye)
+    const devicesToFetch = allDevices.slice(0, 20);
+    
+    const promises = devicesToFetch.map(async (device) => {
       const uid = device.id || device.uniqueid || device.uid || device.deviceId;
       if (!uid) return;
       
@@ -2043,8 +2084,6 @@ async function fetchAllBrosReplyData() {
               checkedAt: checkedAt
             });
             
-            console.log(`📡 BrosReply for ${uid}: available="${available}", checkedAt=${new Date(checkedAt).toLocaleTimeString()}`);
-            
             return { uid, available, checkedAt };
           }
         }
@@ -2055,14 +2094,14 @@ async function fetchAllBrosReplyData() {
       return null;
     });
     
-    const results = await Promise.all(promises);
-    console.log(`✅ BrosReply data fetched for ${results.filter(r => r).length} devices`);
+    await Promise.all(promises);
+    console.log(`✅ Bulk BrosReply data fetched for ${devicesToFetch.length} devices`);
     
     // Ab active devices calculate karo
     calculateActiveDevices();
     
   } catch (error) {
-    console.error('❌ fetchAllBrosReplyData error:', error);
+    console.error('❌ fetchBulkBrosReplyData error:', error);
   }
 }
 
@@ -2084,7 +2123,6 @@ function calculateActiveDevices() {
     // BrosReply se data dekho
     const brosData = brosReplyData.get(uid);
     if (!brosData) {
-      console.log(`❌ ${uid}: No BrosReply data found`);
       return;
     }
     
@@ -2097,8 +2135,6 @@ function calculateActiveDevices() {
     const isDeviceOnline = String(available).toLowerCase().includes('device is online') || 
                           String(available).toLowerCase().includes('online');
     
-    console.log(`📊 ${uid}: checkedAt=${formatTime(checkedAt)}, available="${available}", isWithin15Min=${isWithin15Min}, isDeviceOnline=${isDeviceOnline}`);
-    
     if (isWithin15Min && isDeviceOnline) {
       activeDevicesMap.set(uid, {
         lastSeen: checkedAt,
@@ -2106,14 +2142,12 @@ function calculateActiveDevices() {
         available: available
       });
       activeCount++;
-      console.log(`✅ ${uid}: ACTIVE DEVICE`);
     }
   });
   
   // Update UI
   updateActiveCounterUI(activeCount);
   
-  console.log(`📈 Active devices count: ${activeCount}`);
   return activeCount;
 }
 
@@ -2453,6 +2487,7 @@ function updateCardStatus(uid, status, timestamp) {
     }
     
   } else if (status === 'offline') {
+    button.classList.remove('online');
     button.classList.add('offline');
     button.innerHTML = '<i class="fas fa-times"></i> OFFLINE';
     button.disabled = false;
@@ -2495,7 +2530,7 @@ function initSocketListeners() {
     
     socket = io(BASE_URL || undefined, socketOptions);
 
-    // BrosReply se update aane par
+    // BrosReply se update aane par - SIRF USI DEVICE KO UPDATE KARO
     socket.on("brosReplyUpdate", (payload) => {
       console.log("📡 brosReplyUpdate received:", payload);
       if (payload && payload.uid && payload.data) {
@@ -2516,9 +2551,8 @@ function initSocketListeners() {
         // Active devices recalculate karo
         calculateActiveDevices();
         
-        // Card UI update karo
-        const isActive = isDeviceActive(uid);
-        updateCardUI(uid, isActive);
+        // Card UI update karo - SIRF USI DEVICE KA
+        updateSingleDeviceCard(uid);
         
         // Update lastSeen display
         updateDeviceLastSeen(uid, checkedAt);
@@ -2552,8 +2586,8 @@ function initSocketListeners() {
         document.getElementById("totalDevices").textContent = allDevices.length;
         updateLoadingCounter(allDevices.length);
         
-        // Sabhi devices ke BrosReply data fetch karo
-        fetchAllBrosReplyData().then(() => {
+        // Sirf active badge ke liye bulk fetch karo (limited devices)
+        fetchBulkBrosReplyData().then(() => {
           const currentSearch = document.getElementById("search").value.toLowerCase();
           renderList(currentSearch);
           
@@ -2640,12 +2674,14 @@ function initSocketListeners() {
   }
 }
 
-/* ===== UPDATE CARD UI BASED ON ACTIVE STATUS ===== */
-function updateCardUI(uid, isActive) {
+/* ===== UPDATE SINGLE DEVICE CARD ===== */
+function updateSingleDeviceCard(uid) {
   const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
   if (!card) return;
   
+  const isActive = isDeviceActive(uid);
   const button = card.querySelector('.check-online-btn');
+  
   if (button) {
     if (isActive) {
       button.classList.remove('offline');
@@ -2857,6 +2893,9 @@ async function checkOnline(uid, event) {
     
     const timestamp = Date.now();
     
+    // ✅ SIRF USI DEVICE KA BROSREPLY FETCH KARO
+    fetchSingleBrosReplyData(uid);
+    
     fetch(`${CHECK_API}/${uid}`, {
       method: "POST",
       headers: { 
@@ -2880,23 +2919,6 @@ async function checkOnline(uid, event) {
     })
     .catch(e => {
       console.warn(" Check Online API 1 failed:", e);
-    });
-    
-    fetch(`${BROS_REPLY_API}/${uid}`, {
-      headers: { "Authorization": `Bearer ${authToken}` }
-    })
-    .then(response => {
-      if (response.status === 401 || response.status === 403) {
-        redirectToLogin();
-        return;
-      }
-      return response.json();
-    })
-    .then(result => {
-      console.log(" Bros Reply API response:", result);
-    })
-    .catch(e => {
-      console.warn(" Bros Reply API failed:", e);
     });
     
     const timeoutId = setTimeout(() => {
@@ -3033,7 +3055,7 @@ function renderDevice(d, index) {
     
     <div class="card-footer">
       <div class="device-id" title="${uid}">${uid.substring(0, 10)}...</div>
-      <button class="check-online-btn ${isChecking ? 'checking' : (isActive ? 'online' : '')}" 
+      <button class="check-online-btn ${isChecking ? 'checking' : (isActive ? 'online' : 'offline')}" 
               onclick="checkOnline('${uid}', event)"
               ${isChecking ? 'disabled' : ''}>
         ${isChecking ? 
@@ -3137,8 +3159,8 @@ async function fetchDevices() {
     document.getElementById("totalDevices").textContent = allDevices.length;
     updateLoadingCounter(allDevices.length);
     
-    // Sabhi devices ke BrosReply data fetch karo
-    await fetchAllBrosReplyData();
+    // ✅ SIRF BULK FETCH FOR ACTIVE BADGE (LIMITED DEVICES)
+    await fetchBulkBrosReplyData();
     
     setTimeout(() => {
       hideLoadingAnimation();
@@ -3214,6 +3236,22 @@ function renderList(searchQuery = '') {
   });
 }
 
+/* ===== MANUAL REFRESH FUNCTION ===== */
+async function manualRefresh() {
+  console.log("🔄 Manual refresh initiated");
+  showLoadingAnimation();
+  
+  try {
+    // Refresh devices list
+    await fetchDevices();
+    
+    showNotification('Devices refreshed successfully!', 'success');
+  } catch (error) {
+    console.error("❌ Manual refresh error:", error);
+    showNotification('Refresh failed', 'error');
+  }
+}
+
 /* ===== MAIN INITIALIZATION ===== */
 document.addEventListener('DOMContentLoaded', function() {
   console.log("✅ DOM Content Loaded");
@@ -3226,13 +3264,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
   socket = initSocketListeners();
   
-  // Setup periodic BrosReply data refresh (every 30 seconds)
-  setInterval(fetchAllBrosReplyData, 30000);
-  
-  // Setup cleanup for old data (every minute)
+  // ✅ ACTIVE BADGE KE LIYE PERIODIC CHECK (30 seconds)
   setInterval(() => {
+    console.log("🔄 Periodic active badge check");
     calculateActiveDevices();
-  }, 60000);
+  }, 30000);
+  
+  // ✅ MANUAL REFRESH BUTTON ADD KARO (OPTIONAL)
+  // Agar aap chahein to header mein refresh button add kar sakte hain
   
   let searchTimer;
   document.getElementById("search").addEventListener("input", function() {
@@ -3259,8 +3298,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Start fetching devices
   setTimeout(fetchDevices, 500);
   
-  // Auto refresh every 30 seconds
-  setInterval(fetchDevices, 30000);
+  // Auto refresh devices list every 2 minutes (optional)
+  setInterval(fetchDevices, 120000);
   
   // Page visibility handler
   document.addEventListener('visibilitychange', function() {
@@ -3281,6 +3320,7 @@ document.addEventListener('DOMContentLoaded', function() {
 window.toggleLike = toggleLike;
 window.showDeleteConfirm = showDeleteConfirm;
 window.checkOnline = checkOnline;
+window.manualRefresh = manualRefresh; // Agar refresh button add karte hain
 </script>
 </body>
 </html>
