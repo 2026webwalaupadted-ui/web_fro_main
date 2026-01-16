@@ -1732,7 +1732,7 @@ body {
     </div>
     <div class="active-badge active" id="activeCounter">
       <i class="fas fa-clock"></i>
-      Last 15 Min: <span class="active-count" id="activeCount">5</span>
+      Last 15 Min: <span class="active-count" id="activeCount">0</span>
     </div>
   </div>
 </div>
@@ -1853,8 +1853,8 @@ let authToken = null;
 let sessionId = null;
 let currentDeleteUid = null;
 let deviceCardMap = new Map();
-let activeOnlineDevices = new Map();
-let activeDevices15Min = new Map();
+let activeOnlineDevices = new Map(); // Stores devices that are currently online
+let activeDevices15Min = new Map(); // Stores devices active in last 15 minutes
 let pendingDevices = new Map();
 
 function checkAuth() {
@@ -2027,17 +2027,22 @@ function updateActiveCounter() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
-  for (const [uid, timestamp] of activeDevices15Min.entries()) {
-    if (timestamp < fifteenMinutesAgo) {
+  // 🔥 CRITICAL FIX: Sirf actual online devices ko count karo
+  let actualActiveCount = 0;
+  
+  for (const [uid, data] of activeDevices15Min.entries()) {
+    if (data.timestamp >= fifteenMinutesAgo && data.isOnline === true) {
+      actualActiveCount++;
+    } else {
+      // Agar device 15 minutes se zyada purana hai ya online nahi hai, to remove karo
       activeDevices15Min.delete(uid);
     }
   }
   
-  const activeCount = activeDevices15Min.size;
-  document.getElementById('activeCount').textContent = activeCount;
+  document.getElementById('activeCount').textContent = actualActiveCount;
   
   const badge = document.getElementById('activeCounter');
-  if (activeCount > 0) {
+  if (actualActiveCount > 0) {
     badge.classList.add('active');
   } else {
     badge.classList.remove('active');
@@ -2045,16 +2050,22 @@ function updateActiveCounter() {
 }
 
 function addToActiveDevices(uid, timestamp) {
-  activeDevices15Min.set(uid, timestamp);
-  updateActiveCounter();
+  // 🔥 CRITICAL FIX: Sirf online devices ko add karo
+  if (activeOnlineDevices.has(uid)) {
+    activeDevices15Min.set(uid, { 
+      timestamp: timestamp,
+      isOnline: true 
+    });
+    updateActiveCounter();
+  }
 }
 
 function checkActiveDevicesValidity() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
-  for (const [uid, timestamp] of activeDevices15Min.entries()) {
-    if (timestamp < fifteenMinutesAgo) {
+  for (const [uid, data] of activeDevices15Min.entries()) {
+    if (data.timestamp < fifteenMinutesAgo || data.isOnline !== true) {
       activeDevices15Min.delete(uid);
     }
   }
@@ -2446,6 +2457,7 @@ function updateCardStatus(uid, status, timestamp) {
   } else if (status === 'offline') {
     activeOnlineDevices.delete(uid);
     pendingDevices.delete(uid);
+    activeDevices15Min.delete(uid);
     
     button.classList.add('offline');
     button.innerHTML = '<i class="fas fa-times"></i> OFFLINE';
@@ -2502,6 +2514,9 @@ function updateCardStatus(uid, status, timestamp) {
       }
     }, 300000);
   }
+  
+  // Update active counter after status change
+  updateActiveCounter();
 }
 
 /* ===== RESET DEVICE TO PENDING ===== */
@@ -2519,6 +2534,7 @@ function resetDeviceToPending(uid) {
   if (onlineIndicator) onlineIndicator.remove();
   
   activeOnlineDevices.delete(uid);
+  activeDevices15Min.delete(uid);
   
   const device = allDevices.find(d => {
     const deviceIdFields = [
@@ -2542,6 +2558,8 @@ function resetDeviceToPending(uid) {
     device.online = false;
     device.status = 'pending';
   }
+  
+  updateActiveCounter();
 }
 
 function checkOnlineStatusValidity() {
@@ -3223,15 +3241,22 @@ async function fetchDevices() {
     document.getElementById("totalDevices").textContent = allDevices.length;
     updateLoadingCounter(allDevices.length);
     
+    // 🔥 CRITICAL FIX: Sirf online devices ko active count mein add karo
+    // Pending status wale devices ko count nahi karna chahiye
     const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
     allDevices.forEach(device => {
-      if (device.lastSeen && Number(device.lastSeen) > fifteenMinutesAgo) {
-        const uid = device.id || device.uniqueid || device.uid || device.deviceId;
-        if (uid) {
-          activeDevices15Min.set(uid, Number(device.lastSeen));
+      const uid = device.id || device.uniqueid || device.uid || device.deviceId;
+      if (uid) {
+        // Sirf tabhi add karo jab device actually online ho
+        if (device.online === true && device.lastSeen && Number(device.lastSeen) > fifteenMinutesAgo) {
+          activeDevices15Min.set(uid, { 
+            timestamp: Number(device.lastSeen),
+            isOnline: true 
+          });
         }
       }
     });
+    
     updateActiveCounter();
     
     setTimeout(() => {
