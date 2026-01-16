@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Devices Live - Real-Time Tracker</title>
+<title>Devices Live - Optimized Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -10,6 +10,7 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <style>
+/* ===== RESET & BASE ===== */
 * {
   margin: 0;
   padding: 0;
@@ -63,7 +64,7 @@ body {
   padding-bottom: 20px;
 }
 
-/* ===== ENHANCED HEADER ===== */
+/* ===== HEADER ===== */
 .header {
   background: var(--primary-gradient);
   padding: 14px 20px;
@@ -110,30 +111,25 @@ body {
   50% { transform: scale(1.05); }
 }
 
-/* FORCE PARENT ROW */
 .top-bar {
   display: flex;
   align-items: center;
   justify-content: flex-start;
 }
 
-/* ===== SIDE BY SIDE COUNTERS ===== */
 .user-info {
-  display: flex !important;
-  flex-direction: row !important;
+  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 12px;
-  flex-wrap: nowrap !important;
   white-space: nowrap;
 }
 
-/* COUNTERS MUST NOT BREAK */
 .device-count,
 .active-badge {
   flex: 0 0 auto;
 }
 
-/* TOTAL DEVICES COUNTER */
 .device-count {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
@@ -149,7 +145,6 @@ body {
   justify-content: center;
 }
 
-/* ACTIVE COUNTER */
 .active-badge {
   background: rgba(0, 0, 0, 0.4);
   color: white;
@@ -165,24 +160,21 @@ body {
   justify-content: center;
 }
 
-/* ACTIVE STYLE */
 .active-badge.active {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 
-/* TEXT */
 .device-count span,
 .active-count {
   font-weight: 800;
   font-size: 14px;
 }
 
-/* ===== INFINITY LOOP TEXT ANIMATION ===== */
+/* ===== INFINITY LOOP ===== */
 .infinity-loop-container {
   background: linear-gradient(135deg, #88d7fe, #24d0fb);
   padding: 12px 0;
   overflow: hidden;
-  position: relative;
   border-bottom: 2px solid #003a59;
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
 }
@@ -216,23 +208,16 @@ body {
 }
 
 @keyframes scrollText {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
+/* ===== NAVIGATION ===== */
 .nav {
   background: white;
   border-bottom: 2px solid var(--gray-200);
@@ -310,7 +295,7 @@ body {
   color: inherit;
 }
 
-/* ===== COMPACT SEARCH BAR ===== */
+/* ===== SEARCH ===== */
 .search-bar {
   background: white;
   padding: 16px 20px;
@@ -358,7 +343,7 @@ body {
   z-index: 2;
 }
 
-/* ===== MAIN CONTENT WITH GRID LAYOUT ===== */
+/* ===== MAIN CONTENT ===== */
 .main {
   padding: 0 16px 20px;
   max-width: 1200px;
@@ -371,7 +356,7 @@ body {
   gap: 16px;
 }
 
-/* ===== SUPER COMPACT CARD DESIGN ===== */
+/* ===== DEVICE CARD ===== */
 .device-card {
   background: white;
   border-radius: var(--radius-md);
@@ -404,7 +389,6 @@ body {
   z-index: 1;
 }
 
-/* ===== ALL BUTTONS IN TOP RIGHT CORNER ===== */
 .top-buttons-container {
   position: absolute;
   top: 8px;
@@ -415,7 +399,6 @@ body {
   z-index: 4;
 }
 
-/* ===== SERIAL NUMBER BADGE ===== */
 .serial-badge {
   width: 32px;
   height: 32px;
@@ -455,7 +438,6 @@ body {
   box-shadow: 0 3px 8px rgba(107, 114, 128, 0.4);
 }
 
-/* ===== LIKE BUTTON ===== */
 .like-btn {
   width: 32px;
   height: 32px;
@@ -490,7 +472,6 @@ body {
   box-shadow: 0 4px 14px rgba(236, 72, 153, 0.6);
 }
 
-/* ===== DELETE BUTTON ===== */
 .delete-btn {
   width: 32px;
   height: 32px;
@@ -514,7 +495,6 @@ body {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
-/* CARD HEADER */
 .card-header {
   display: flex;
   align-items: center;
@@ -584,7 +564,6 @@ body {
   position: relative;
 }
 
-/* SIM INFO */
 .sim-info {
   background: var(--gray-50);
   padding: 6px 12px;
@@ -642,7 +621,6 @@ body {
   text-overflow: ellipsis;
 }
 
-/* DATE/TIME INFO */
 .time-info {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -681,7 +659,6 @@ body {
   font-size: 9px;
 }
 
-/* CARD FOOTER */
 .card-footer {
   display: flex;
   align-items: center;
@@ -768,7 +745,6 @@ body {
   min-width: 80px;
 }
 
-/* PENDING STATUS */
 .check-online-btn.pending {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   border-color: #d97706;
@@ -776,354 +752,7 @@ body {
   min-width: 80px;
 }
 
-/* EMPTY STATE */
-.empty {
-  text-align: center;
-  padding: 40px 20px;
-  background: white;
-  border-radius: var(--radius-lg);
-  border: 2px dashed var(--gray-300);
-  box-shadow: var(--shadow-sm);
-  margin: 20px 0;
-  grid-column: 1 / -1;
-}
-
-.empty i {
-  font-size: 36px;
-  margin-bottom: 16px;
-  color: var(--gray-400);
-  opacity: 0.7;
-}
-
-.empty h3 {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--gray-600);
-}
-
-.empty p {
-  font-size: 13px;
-  color: var(--gray-500);
-  max-width: 280px;
-  margin: 0 auto;
-  line-height: 1.4;
-}
-
-/* ===== CHECK ONLINE POPUP ===== */
-.check-popup {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.check-popup.active {
-  display: flex;
-}
-
-.check-popup-content {
-  background: white;
-  border-radius: var(--radius-md);
-  padding: 0;
-  max-width: 350px;
-  width: 100%;
-  text-align: center;
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease;
-  border: 2px solid var(--primary);
-  position: relative;
-  overflow: hidden;
-}
-
-.check-popup-content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: var(--primary-gradient);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.check-popup-header {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  padding: 16px;
-  color: white;
-  text-align: left;
-}
-
-.check-popup-title {
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.check-popup-body {
-  padding: 16px;
-}
-
-.popup-status-container {
-  background: var(--gray-100);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.popup-status-label {
-  font-size: 11px;
-  color: var(--gray-500);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.popup-status-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--primary);
-  font-family: 'Roboto Mono', monospace;
-}
-
-.check-popup-timer {
-  font-size: 28px;
-  font-weight: 700;
-  text-align: center;
-  margin: 16px 0;
-  font-family: 'Roboto Mono', monospace;
-  color: var(--primary);
-}
-
-.check-popup-timer.warning { color: #f59e0b; }
-.check-popup-timer.critical { color: #ef4444; }
-
-.check-popup-progress {
-  height: 4px;
-  background: var(--gray-200);
-  border-radius: 2px;
-  margin: 16px 0;
-  overflow: hidden;
-}
-
-.check-popup-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), #3b82f6);
-  border-radius: 2px;
-  transition: width 1s linear;
-}
-
-.check-popup-message {
-  background: var(--gray-50);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  margin: 16px 0;
-  text-align: center;
-  font-size: 13px;
-  color: var(--gray-700);
-}
-
-.check-popup-footer {
-  display: flex;
-  gap: 8px;
-  padding: 16px;
-  border-top: 1px solid var(--gray-200);
-}
-
-.popup-btn {
-  flex: 1;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.popup-btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-}
-
-.popup-btn-primary:hover {
-  background: linear-gradient(135deg, var(--primary-dark), #1e3a8a);
-  transform: translateY(-2px);
-}
-
-.popup-btn-secondary {
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border: 1px solid var(--gray-300);
-}
-
-.popup-btn-secondary:hover {
-  background: var(--gray-200);
-  transform: translateY(-2px);
-}
-
-/* DELETE CONFIRMATION POPUP */
-.delete-confirm-popup {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 1001;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  animation: fadeIn 0.2s ease;
-}
-
-.delete-confirm-popup.active {
-  display: flex;
-}
-
-.delete-confirm-content {
-  background: white;
-  border-radius: var(--radius-md);
-  padding: 0;
-  max-width: 380px;
-  width: 100%;
-  text-align: center;
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease;
-  border: 2px solid var(--danger);
-  position: relative;
-  overflow: hidden;
-}
-
-.delete-confirm-content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(135deg, var(--danger), var(--danger-dark));
-}
-
-.delete-confirm-header {
-  background: linear-gradient(135deg, var(--danger), var(--danger-dark));
-  padding: 16px;
-  color: white;
-  text-align: left;
-}
-
-.delete-confirm-title {
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.delete-confirm-body {
-  padding: 24px 16px;
-  text-align: center;
-}
-
-.delete-confirm-icon {
-  font-size: 48px;
-  color: var(--danger);
-  margin-bottom: 16px;
-  opacity: 0.8;
-}
-
-.delete-confirm-message {
-  font-size: 14px;
-  color: var(--gray-700);
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-
-.delete-device-name {
-  font-weight: 700;
-  color: var(--danger-dark);
-  background: rgba(239, 68, 68, 0.1);
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  display: inline-block;
-  margin: 8px 0;
-}
-
-.delete-confirm-footer {
-  display: flex;
-  gap: 8px;
-  padding: 16px;
-  border-top: 1px solid var(--gray-200);
-}
-
-.delete-confirm-btn {
-  flex: 1;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.delete-confirm-btn-danger {
-  background: linear-gradient(135deg, var(--danger), var(--danger-dark));
-  color: white;
-}
-
-.delete-confirm-btn-danger:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  transform: translateY(-2px);
-}
-
-.delete-confirm-btn-cancel {
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border: 1px solid var(--gray-300);
-}
-
-.delete-confirm-btn-cancel:hover {
-  background: var(--gray-200);
-  transform: translateY(-2px);
-}
-
-/* ONLINE STATUS INDICATOR */
+/* ===== ONLINE INDICATOR ===== */
 .online-indicator {
   position: absolute;
   top: 0;
@@ -1140,7 +769,6 @@ body {
   display: block;
 }
 
-/* RESPONSE TIMER */
 .response-timer {
   background: var(--warning);
   color: white;
@@ -1340,274 +968,359 @@ body {
   }
 }
 
+/* ===== CHECK POPUP ===== */
+.check-popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.check-popup.active {
+  display: flex;
+}
+
+.check-popup-content {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 0;
+  max-width: 350px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease;
+  border: 2px solid var(--primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.check-popup-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--primary-gradient);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.check-popup-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  padding: 16px;
+  color: white;
+  text-align: left;
+}
+
+.check-popup-title {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-popup-body {
+  padding: 16px;
+}
+
+.popup-status-container {
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.popup-status-label {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.popup-status-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  font-family: 'Roboto Mono', monospace;
+}
+
+.check-popup-timer {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  margin: 16px 0;
+  font-family: 'Roboto Mono', monospace;
+  color: var(--primary);
+}
+
+.check-popup-timer.warning { color: #f59e0b; }
+.check-popup-timer.critical { color: #ef4444; }
+
+.check-popup-progress {
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.check-popup-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #3b82f6);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+.check-popup-message {
+  background: var(--gray-50);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin: 16px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-700);
+}
+
+.check-popup-footer {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.popup-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.popup-btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+}
+
+.popup-btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-dark), #1e3a8a);
+  transform: translateY(-2px);
+}
+
+.popup-btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+
+.popup-btn-secondary:hover {
+  background: var(--gray-200);
+  transform: translateY(-2px);
+}
+
+/* ===== DELETE CONFIRM POPUP ===== */
+.delete-confirm-popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1001;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.delete-confirm-popup.active {
+  display: flex;
+}
+
+.delete-confirm-content {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 0;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease;
+  border: 2px solid var(--danger);
+  position: relative;
+  overflow: hidden;
+}
+
+.delete-confirm-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+}
+
+.delete-confirm-header {
+  background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+  padding: 16px;
+  color: white;
+  text-align: left;
+}
+
+.delete-confirm-title {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-confirm-body {
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.delete-confirm-icon {
+  font-size: 48px;
+  color: var(--danger);
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.delete-confirm-message {
+  font-size: 14px;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.delete-device-name {
+  font-weight: 700;
+  color: var(--danger-dark);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin: 8px 0;
+}
+
+.delete-confirm-footer {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.delete-confirm-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.delete-confirm-btn-danger {
+  background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+  color: white;
+}
+
+.delete-confirm-btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+}
+
+.delete-confirm-btn-cancel {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+
+.delete-confirm-btn-cancel:hover {
+  background: var(--gray-200);
+  transform: translateY(-2px);
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 1024px) {
-  .devices {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 14px;
-  }
-}
-
 @media (max-width: 768px) {
-  .header {
-    padding: 12px 16px;
-  }
-  
-  .header-title {
-    font-size: 18px;
-  }
-  
-  .live {
-    font-size: 10px;
-    padding: 2px 8px;
-  }
-  
-  .device-count,
-  .active-badge {
-    padding: 6px 10px;
-    font-size: 11px;
-    min-width: auto;
-  }
-  
-  .device-count {
-    min-width: 100px;
-  }
-  
-  .active-badge {
-    min-width: 130px;
-  }
-  
-  .infinity-text {
-    font-size: 12px;
-  }
-  
-  .nav {
-    top: 56px;
-    padding: 5px 0;
-  }
-  
-  .nav a {
-    padding: 8px 12px;
-    font-size: 13px;
-    gap: 6px;
-  }
-  
-  .nav a i {
-    font-size: 14px;
-  }
-  
-  .search-bar {
-    padding: 14px 16px;
-    top: 92px;
-  }
-  
-  .search-bar input {
-    padding: 10px 12px 10px 38px;
-    font-size: 13px;
-  }
-  
-  .search-bar i {
-    left: 14px;
-    font-size: 14px;
-  }
-  
-  .main {
-    padding: 0 12px 16px;
-  }
-  
-  .devices {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 12px;
-  }
-  
-  .device-card {
-    height: 155px;
-  }
-  
-  .card-header {
-    padding: 8px 12px 5px;
-    gap: 8px;
-  }
-  
-  .device-image {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .device-name {
-    font-size: 12px;
-  }
-  
-  .device-version {
-    font-size: 10px;
-    padding: 1px 5px;
-  }
-  
-  .top-buttons-container {
-    top: 6px;
-    right: 6px;
-    gap: 4px;
-  }
-  
-  .serial-badge,
-  .like-btn,
-  .delete-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 11px;
-  }
-  
-  .sim-info {
-    padding: 5px 10px;
-    margin: 0 12px 5px;
-    min-height: 50px;
-  }
-  
-  .card-footer {
-    padding: 5px 12px;
-    min-height: 35px;
-  }
-  
-  .check-online-btn {
-    padding: 4px 10px;
-    font-size: 10px;
-    min-width: 95px;
-  }
-  
-  .check-online-btn.checking {
-    min-width: 95px;
-  }
-  
-  .check-popup-content {
-    margin: 10px;
-  }
-}
-
-@media (max-width: 600px) {
-  .user-info {
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-end;
-  }
-  
-  .device-count,
-  .active-badge {
-    min-width: 120px;
-    justify-content: flex-start;
-  }
-  
-  .infinity-text {
-    font-size: 11px;
-    gap: 6px;
-  }
-  
-  .infinity-loop-content {
-    gap: 15px;
-    padding-right: 30px;
-  }
+  .header { padding: 12px 16px; }
+  .header-title { font-size: 18px; }
+  .live { font-size: 10px; padding: 2px 8px; }
+  .device-count, .active-badge { padding: 6px 10px; font-size: 11px; min-width: auto; }
+  .infinity-text { font-size: 12px; }
+  .nav { top: 56px; padding: 5px 0; }
+  .nav a { padding: 8px 12px; font-size: 13px; gap: 6px; }
+  .search-bar { padding: 14px 16px; top: 92px; }
+  .search-bar input { padding: 10px 12px 10px 38px; font-size: 13px; }
+  .main { padding: 0 12px 16px; }
+  .devices { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .device-card { height: 155px; }
+  .card-header { padding: 8px 12px 5px; gap: 8px; }
+  .device-image { width: 30px; height: 30px; }
+  .device-name { font-size: 12px; }
+  .top-buttons-container { top: 6px; right: 6px; gap: 4px; }
+  .serial-badge, .like-btn, .delete-btn { width: 28px; height: 28px; font-size: 11px; }
+  .sim-info { padding: 5px 10px; margin: 0 12px 5px; min-height: 50px; }
+  .card-footer { padding: 5px 12px; min-height: 35px; }
+  .check-online-btn { padding: 4px 10px; font-size: 10px; min-width: 95px; }
 }
 
 @media (max-width: 480px) {
-  .devices {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  
-  .device-card {
-    height: 150px;
-  }
-  
-  .header-inner,
-  .nav-container,
-  .main {
-    padding: 0 12px;
-  }
-  
-  .infinity-loop-container {
-    padding: 6px 0;
-  }
-  
-  .infinity-text {
-    font-size: 10px;
-    gap: 5px;
-  }
-  
-  .infinity-loop-content {
-    gap: 10px;
-    padding-right: 20px;
-  }
-  
-  .nav a {
-    padding: 7px 10px;
-    font-size: 12px;
-    gap: 5px;
-  }
-  
-  .device-image {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .device-name {
-    font-size: 11px;
-  }
-  
-  .device-version {
-    font-size: 9px;
-    background-color: rgba(0, 110, 255, 0.8);
-    color: #ffffff;
-    margin-bottom: 20px;
-    padding: 5px;
-    border-radius: 4px;
-    display: inline-block;
-    font-weight: bold;
-  }
-  
-  .top-buttons-container {
-    top: 5px;
-    right: 5px;
-    gap: 3px;
-  }
-  
-  .serial-badge,
-  .like-btn,
-  .delete-btn {
-    width: 26px;
-    height: 26px;
-    font-size: 10px;
-  }
-  
-  .card-header {
-    padding: 7px 10px 4px;
-    gap: 6px;
-  }
-  
-  .sim-info {
-    padding: 4px 8px;
-    margin: 0 10px 4px;
-    min-height: 48px;
-  }
-  
-  .card-footer {
-    padding: 4px 10px;
-    min-height: 32px;
-  }
-  
-  .device-id {
-    max-width: 80px;
-    font-size: 9px;
-    padding: 2px 5px;
-  }
-  
-  .check-online-btn {
-    padding: 3px 8px;
-    font-size: 9px;
-    min-width: 85px;
-  }
-  
-  .check-online-btn.checking {
-    min-width: 85px;
-  }
+  .devices { grid-template-columns: 1fr; gap: 10px; }
+  .device-card { height: 150px; }
+  .header-inner, .nav-container, .main { padding: 0 12px; }
+  .infinity-loop-container { padding: 6px 0; }
+  .infinity-text { font-size: 10px; gap: 5px; }
+  .nav a { padding: 7px 10px; font-size: 12px; gap: 5px; }
+  .device-image { width: 28px; height: 28px; }
+  .device-name { font-size: 11px; }
+  .top-buttons-container { top: 5px; right: 5px; gap: 3px; }
+  .serial-badge, .like-btn, .delete-btn { width: 26px; height: 26px; font-size: 10px; }
+  .card-header { padding: 7px 10px 4px; gap: 6px; }
+  .sim-info { padding: 4px 8px; margin: 0 10px 4px; min-height: 48px; }
+  .card-footer { padding: 4px 10px; min-height: 32px; }
+  .device-id { max-width: 80px; font-size: 9px; padding: 2px 5px; }
+  .check-online-btn { padding: 3px 8px; font-size: 9px; min-width: 85px; }
 }
 
 /* CUSTOM SCROLLBAR */
@@ -1764,7 +1477,6 @@ body {
         Active Devices: <span id="activeLoopCount">0</span>
       </div>
     </div>
-    <!-- Duplicate for seamless loop -->
     <div class="infinity-loop-content">
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
@@ -1786,7 +1498,6 @@ body {
   </div>
 </div>
 
-<!-- NAVIGATION -->
 <nav class="nav">
   <div class="nav-container">
     <div class="nav-links">
@@ -1810,7 +1521,6 @@ body {
   </div>
 </nav>
 
-<!-- SEARCH -->
 <div class="search-bar">
   <div class="search-container">
     <i class="fas fa-search"></i>
@@ -1824,19 +1534,21 @@ body {
 </div>
 
 <script type="module">
+// ============================================
+// 🔥 COMPLETE OPTIMIZED FRONTEND LOGIC
+// ============================================
+
 let API_BASE, BASE_URL;
 try {
   API_BASE = import.meta.env?.VITE_API_BASE;
   BASE_URL = API_BASE;
   
-  console.log("✅ Environment loaded:");
-  console.log("API_BASE:", API_BASE);
-  console.log("BASE_URL:", BASE_URL);
+  console.log("✅ Environment loaded:", API_BASE, BASE_URL);
 } catch (error) {
   console.error("❌ Environment loading failed:", error);
 }
 
-// ✅ API ENDPOINTS
+// API ENDPOINTS
 const DEVICE_API = `${BASE_URL}/api/devices`;
 const CHECK_API = `${BASE_URL}/api/check-online`;
 const BROS_REPLY_API = `${BASE_URL}/api/brosreply`;
@@ -1845,7 +1557,7 @@ const DELETE_DEVICE_API = `${BASE_URL}/api/delete`;
 const LIKE_UNLIKE_API = `${BASE_URL}/api/likeunlike`;
 const LIKES_API = `${BASE_URL}/api/likes`;
 
-// Global variables
+// GLOBAL VARIABLES
 let allDevices = [];
 let checkingDevices = new Map();
 let countdownInterval = null;
@@ -1858,115 +1570,11 @@ let authToken = null;
 let sessionId = null;
 let currentDeleteUid = null;
 let deviceCardMap = new Map();
-let activeOnlineDevices = new Set();
-let activeDevices15Min = new Set();
+let activeDevicesSet = new Set(); // 🔥 Store active devices from DB
 
-// 🔥 FUNCTION: Check if device is ACTIVE based on brosReply data
-function isDeviceActive(brosReplyData) {
-  if (!brosReplyData) return false;
-  
-  // Check available status
-  const available = brosReplyData.available?.toString()?.toLowerCase() || '';
-  
-  // Must be "device is online" or "true"
-  const isOnline = 
-    available.includes("device is online") ||
-    available.includes("device online") ||
-    available === "true" ||
-    brosReplyData.available === true;
-  
-  if (!isOnline) return false;
-  
-  // Check checkedAt within 15 minutes
-  const checkedAt = brosReplyData.checkedAt;
-  if (!checkedAt) return false;
-  
-  const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
-  return Number(checkedAt) > fifteenMinutesAgo;
-}
-
-// 🔥 FUNCTION: Update active devices counter
-function updateActiveCounter() {
-  const activeCount = activeDevices15Min.size;
-  document.getElementById('activeCount').textContent = activeCount;
-  document.getElementById('activeLoopCount').textContent = activeCount;
-  document.getElementById('activeLoopCount2').textContent = activeCount;
-  
-  const badge = document.getElementById('activeCounter');
-  if (activeCount > 0) {
-    badge.classList.add('active');
-  } else {
-    badge.classList.remove('active');
-  }
-  
-  console.log(`📊 Active Devices (15min): ${activeCount}`);
-}
-
-// 🔥 FUNCTION: Update all device cards based on active status
-function updateAllDeviceCardsStatus() {
-  allDevices.forEach(device => {
-    const uid = device.id || device.uniqueid || device.uid || device.deviceId;
-    if (!uid) return;
-    
-    const isActive = activeDevices15Min.has(uid);
-    updateDeviceCardStatus(uid, isActive);
-  });
-}
-
-// 🔥 FUNCTION: Update single device card status
-function updateDeviceCardStatus(uid, isActive) {
-  const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
-  if (!card) return;
-  
-  const button = card.querySelector('.check-online-btn');
-  const onlineIndicator = card.querySelector('.online-indicator');
-  
-  if (isActive) {
-    // Mark as ONLINE
-    if (button && !button.classList.contains('checking')) {
-      button.classList.remove('offline', 'pending');
-      button.classList.add('online');
-      button.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
-      button.disabled = false;
-    }
-    
-    // Add online indicator
-    const deviceMeta = card.querySelector('.device-meta');
-    if (deviceMeta) {
-      let indicator = deviceMeta.querySelector('.online-indicator');
-      if (!indicator) {
-        indicator = document.createElement('span');
-        indicator.className = 'online-indicator visible';
-        deviceMeta.appendChild(indicator);
-      }
-    }
-    
-  } else {
-    // Mark as NOT ONLINE
-    if (button && !button.classList.contains('checking') && 
-        !button.classList.contains('offline') && 
-        !button.classList.contains('pending')) {
-      button.classList.remove('online');
-      button.innerHTML = '<i class="fas fa-wifi"></i> CHECK ONLINE';
-    }
-    
-    // Remove online indicator
-    if (onlineIndicator) {
-      onlineIndicator.remove();
-    }
-  }
-}
-
-// 🔥 FUNCTION: Clean up old active devices (older than 15 min)
-function cleanupOldActiveDevices() {
-  const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
-  let cleanedCount = 0;
-  
-  // We'll clean this in the socket listener based on actual data
-  console.log('🧹 Running active devices cleanup check');
-}
-
-// Check authentication
+// ============================================
+// 🔥 AUTHENTICATION FUNCTIONS
+// ============================================
 function checkAuth() {
   authToken = localStorage.getItem('mr_robot_token');
   sessionId = localStorage.getItem('mr_robot_session_id');
@@ -2016,6 +1624,290 @@ async function verifyTokenWithServer() {
   }
 }
 
+// ============================================
+// 🔥 ACTIVE DEVICES MANAGEMENT
+// ============================================
+function updateActiveCounter() {
+  const activeCount = activeDevicesSet.size;
+  
+  // Update all counters
+  document.getElementById('activeCount').textContent = activeCount;
+  document.getElementById('activeLoopCount').textContent = activeCount;
+  document.getElementById('activeLoopCount2').textContent = activeCount;
+  
+  // Update badge style
+  const badge = document.getElementById('activeCounter');
+  if (activeCount > 0) {
+    badge.classList.add('active');
+  } else {
+    badge.classList.remove('active');
+  }
+  
+  console.log(`📊 Active Devices Counter: ${activeCount}`);
+}
+
+function updateAllDeviceCards() {
+  console.log(`🔄 Updating ${allDevices.length} device cards`);
+  
+  // Reset all cards to default
+  document.querySelectorAll('.check-online-btn').forEach(btn => {
+    if (!btn.classList.contains('checking')) {
+      btn.classList.remove('online', 'offline', 'pending');
+      btn.innerHTML = '<i class="fas fa-wifi"></i> CHECK ONLINE';
+    }
+  });
+  
+  // Remove all online indicators
+  document.querySelectorAll('.online-indicator').forEach(ind => ind.remove());
+  
+  // Set active devices
+  activeDevicesSet.forEach(deviceId => {
+    const card = document.querySelector(`.device-card[data-uid="${deviceId}"]`);
+    if (card) {
+      const button = card.querySelector('.check-online-btn');
+      if (button && !button.classList.contains('checking')) {
+        button.classList.add('online');
+        button.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
+        
+        // Add online indicator
+        const deviceMeta = card.querySelector('.device-meta');
+        if (deviceMeta) {
+          const indicator = document.createElement('span');
+          indicator.className = 'online-indicator visible';
+          deviceMeta.appendChild(indicator);
+        }
+      }
+    }
+  });
+}
+
+// ============================================
+// 🔥 SOCKET.IO HANDLERS
+// ============================================
+function initSocketListeners() {
+  try {
+    const socketOptions = {
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    };
+    
+    if (authToken) {
+      socketOptions.auth = { token: authToken };
+      socketOptions.query = { token: authToken, sessionId: sessionId };
+    }
+    
+    socket = io(BASE_URL || undefined, socketOptions);
+    
+    // 🔥 CRITICAL: Active devices from DB (every 30 seconds)
+    socket.on("activeDevicesDB", (data) => {
+      console.log("📡 Active Devices from DB:", data);
+      
+      if (data && Array.isArray(data.activeDevices)) {
+        // Update active devices set
+        activeDevicesSet = new Set(data.activeDevices);
+        
+        // Update counter
+        updateActiveCounter();
+        
+        // Update all device cards
+        updateAllDeviceCards();
+        
+        console.log(`✅ Updated ${data.activeDevices.length} active devices from DB scan`);
+      }
+    });
+    
+    // Real-time individual device updates
+    socket.on("deviceStatusUpdate", (data) => {
+      console.log("⚡ Real-time device update:", data);
+      
+      if (data && data.deviceId !== undefined) {
+        if (data.isActive) {
+          activeDevicesSet.add(data.deviceId);
+        } else {
+          activeDevicesSet.delete(data.deviceId);
+        }
+        
+        updateActiveCounter();
+        
+        // Update specific card
+        const card = document.querySelector(`.device-card[data-uid="${data.deviceId}"]`);
+        if (card) {
+          const button = card.querySelector('.check-online-btn');
+          if (button && !button.classList.contains('checking')) {
+            if (data.isActive) {
+              button.classList.add('online');
+              button.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
+              
+              // Add indicator
+              const deviceMeta = card.querySelector('.device-meta');
+              if (deviceMeta && !deviceMeta.querySelector('.online-indicator')) {
+                const indicator = document.createElement('span');
+                indicator.className = 'online-indicator visible';
+                deviceMeta.appendChild(indicator);
+              }
+            } else {
+              button.classList.remove('online');
+              button.innerHTML = '<i class="fas fa-wifi"></i> CHECK ONLINE';
+              
+              // Remove indicator
+              const indicator = card.querySelector('.online-indicator');
+              if (indicator) indicator.remove();
+            }
+          }
+        }
+      }
+    });
+    
+    // Listen for brosReply updates
+    socket.on("brosReplyUpdate", (payload) => {
+      console.log("📡 brosReplyUpdate received:", payload);
+      
+      if (payload && payload.uid && payload.data) {
+        // If this is the device we're checking in popup
+        if (currentReplyUid === payload.uid) {
+          const isOnline = checkIfOnline(payload.data);
+          
+          if (isOnline) {
+            stopCountdown();
+            document.getElementById('popupStatus').textContent = 'Device Online ✓';
+            document.getElementById('popupMessage').textContent = 'Device confirmed online';
+            document.getElementById('refreshPopupBtn').style.display = 'flex';
+          }
+          
+          updateCardStatus(payload.uid, isOnline ? 'online' : 'pending', Date.now());
+          clearCheckingTimer(payload.uid);
+        }
+      }
+    });
+    
+    // Listen for devicesLive updates
+    socket.on("devicesLive", (payload) => {
+      if (payload && Array.isArray(payload.data)) {
+        allDevices = (payload.data || []).sort((a, b) => {
+          const timeA = Number(b.joinedAt || b.installTime || 0);
+          const timeB = Number(a.joinedAt || a.installTime || 0);
+          return timeA - timeB;
+        });
+        
+        allDevices = assignSerialNumbers(allDevices);
+        
+        document.getElementById("totalDevices").textContent = allDevices.length;
+        updateLoadingCounter(allDevices.length);
+        
+        const currentSearch = document.getElementById("search").value.toLowerCase();
+        renderList(currentSearch);
+        
+        // Re-apply active status to newly rendered cards
+        updateAllDeviceCards();
+      }
+    });
+    
+    // Connection events
+    socket.on("connect", () => {
+      console.log("✅ Socket connected successfully");
+    });
+    
+    socket.on("connect_error", (err) => {
+      console.warn("⚠️ Socket connection error:", err.message);
+      if (err.message.includes("auth") || err.message.includes("token")) {
+        redirectToLogin();
+      }
+    });
+    
+    socket.on("disconnect", (reason) => {
+      console.log("❌ Socket disconnected:", reason);
+    });
+    
+    return socket;
+    
+  } catch (e) {
+    console.error("❌ Socket init failed:", e);
+    return null;
+  }
+}
+
+// ============================================
+// 🔥 DEVICE CHECK FUNCTIONS
+// ============================================
+function checkIfOnline(deviceData) {
+  if (!deviceData || !deviceData.available) return false;
+  
+  const available = String(deviceData.available).toLowerCase().trim();
+  
+  return (
+    available.includes("device is online") ||
+    available.includes("device online") ||
+    available === "true" ||
+    deviceData.available === true
+  );
+}
+
+async function checkOnline(uid, event) {
+  if (event) event.stopPropagation();
+  
+  if (checkingDevices.has(uid)) return;
+  
+  updateCardStatus(uid, 'checking', Date.now());
+  currentReplyUid = uid;
+  showCheckPopup();
+  startCountdown();
+  
+  try {
+    checkingDevices.set(uid, {
+      startTime: Date.now(),
+      timeoutId: null
+    });
+    
+    // Send check request
+    const response = await fetch(`${CHECK_API}/${uid}`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ 
+        available: "checking",
+        timestamp: Date.now()
+      })
+    });
+    
+    if (response.status === 401 || response.status === 403) {
+      redirectToLogin();
+      return;
+    }
+    
+    console.log(`✅ Check request sent for ${uid}`);
+    
+    // Timeout after 30 seconds
+    const timeoutId = setTimeout(() => {
+      if (checkingDevices.has(uid)) {
+        updateCardStatus(uid, 'pending', Date.now());
+        checkingDevices.delete(uid);
+        
+        if (currentReplyUid === uid) {
+          document.getElementById('popupStatus').textContent = 'No Immediate Reply';
+          document.getElementById('popupMessage').textContent = 'Device status pending confirmation';
+          document.getElementById('refreshPopupBtn').style.display = 'flex';
+          stopCountdown();
+        }
+      }
+    }, 30000);
+    
+    checkingDevices.get(uid).timeoutId = timeoutId;
+    
+  } catch (e) {
+    console.error("Check online error:", e);
+    updateCardStatus(uid, 'pending', Date.now());
+    clearCheckingTimer(uid);
+  }
+}
+
+// ============================================
+// 🔥 UI HELPER FUNCTIONS
+// ============================================
 function assignSerialNumbers(devices) {
   const totalDevices = devices.length;
   
@@ -2048,6 +1940,45 @@ function updateLoadingCounter(total) {
   document.getElementById('loadingTotalCount').textContent = total;
 }
 
+function updateCardStatus(uid, status, timestamp) {
+  const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
+  if (!card) return;
+
+  const button = card.querySelector('.check-online-btn');
+  if (!button) return;
+  
+  button.classList.remove('checking', 'online', 'offline', 'pending');
+  button.disabled = false;
+  
+  if (status === 'online') {
+    button.classList.add('online');
+    button.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
+  } else if (status === 'offline') {
+    button.classList.add('offline');
+    button.innerHTML = '<i class="fas fa-times"></i> OFFLINE';
+  } else if (status === 'checking') {
+    button.classList.add('checking');
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CHECKING...';
+    button.disabled = true;
+  } else if (status === 'pending') {
+    button.classList.add('pending');
+    button.innerHTML = '<i class="fas fa-hourglass-half"></i> PENDING';
+  }
+}
+
+function clearCheckingTimer(uid) {
+  if (checkingDevices.has(uid)) {
+    const data = checkingDevices.get(uid);
+    if (data.timeoutId) {
+      clearTimeout(data.timeoutId);
+    }
+    checkingDevices.delete(uid);
+  }
+}
+
+// ============================================
+// 🔥 POPUP FUNCTIONS
+// ============================================
 function showCheckPopup() {
   document.getElementById('checkPopup').classList.add('active');
   document.getElementById('popupStatus').textContent = 'Waiting for reply…';
@@ -2115,24 +2046,9 @@ function handleCountdownEnd() {
   }
 }
 
-function updatePopupFromReply(data, message) {
-  if (!currentReplyUid) return;
-  
-  const isActiveDevice = isDeviceActive(data);
-  
-  if (isActiveDevice) {
-    stopCountdown();
-    document.getElementById('popupStatus').textContent = 'Device Online ✓';
-    document.getElementById('popupMessage').textContent = 'Device confirmed online (active within 15 min)';
-    document.getElementById('refreshPopupBtn').style.display = 'flex';
-  } else {
-    document.getElementById('popupStatus').textContent = 'Status Pending';
-    document.getElementById('popupMessage').textContent = 'Device not active or reply > 15 min';
-    document.getElementById('refreshPopupBtn').style.display = 'flex';
-  }
-}
-
-// Delete Device Functions
+// ============================================
+// 🔥 DELETE DEVICE FUNCTIONS
+// ============================================
 function showDeleteConfirm(uid, deviceName) {
   currentDeleteUid = uid;
   document.getElementById('deleteDeviceName').textContent = deviceName || 'Unknown Device';
@@ -2176,20 +2092,17 @@ async function deleteDevice(uid) {
         
         return !deviceIdFields.some(id => 
           id === uid || 
-          id?.toString() === uid?.toString() ||
-          id?.includes(uid) || 
-          uid?.includes(id)
+          id?.toString() === uid?.toString()
         );
       });
       
-      activeDevices15Min.delete(uid);
+      activeDevicesSet.delete(uid);
       updateActiveCounter();
       
       document.getElementById("totalDevices").textContent = allDevices.length;
       updateLoadingCounter(allDevices.length);
       
-      const currentSearch = document.getElementById("search").value.toLowerCase();
-      renderList(currentSearch);
+      renderList(document.getElementById("search").value.toLowerCase());
       
       hideDeleteConfirm();
       
@@ -2205,7 +2118,9 @@ async function deleteDevice(uid) {
   }
 }
 
-// Like/Unlike Functions
+// ============================================
+// 🔥 LIKE/UNLIKE FUNCTIONS
+// ============================================
 async function toggleLike(uid, event) {
   if (event) event.stopPropagation();
   
@@ -2221,9 +2136,7 @@ async function toggleLike(uid, event) {
     
     return deviceIdFields.some(id => 
       id === uid || 
-      id?.toString() === uid?.toString() ||
-      id?.includes(uid) || 
-      uid?.includes(id)
+      id?.toString() === uid?.toString()
     );
   });
   
@@ -2284,32 +2197,9 @@ function updateLikeUI(uid, isLiked) {
   }
 }
 
-function initPopupEvents() {
-  document.getElementById('refreshPopupBtn').onclick = () => {
-    if (currentReplyUid) {
-      hideCheckPopup();
-      checkOnline(currentReplyUid);
-    }
-  };
-  
-  document.getElementById('closePopupBtn').onclick = hideCheckPopup;
-  
-  document.getElementById('confirmDeleteBtn').onclick = () => {
-    if (currentDeleteUid) {
-      deleteDevice(currentDeleteUid);
-    }
-  };
-  
-  document.getElementById('cancelDeleteBtn').onclick = hideDeleteConfirm;
-  
-  document.getElementById('deleteConfirmPopup').addEventListener('click', function(e) {
-    if (e.target === this) {
-      hideDeleteConfirm();
-    }
-  });
-}
-
-// Get SIM Number
+// ============================================
+// 🔥 DEVICE CARD RENDERING
+// ============================================
 function getDisplaySimInfo(device) {
   let simNumber = "";
   let simCarrier = "";
@@ -2328,7 +2218,6 @@ function getDisplaySimInfo(device) {
   return { simNumber, simCarrier };
 }
 
-// Format Time
 function formatTime(timestamp) {
   if (!timestamp || timestamp === "0") return "Never";
   
@@ -2355,7 +2244,6 @@ function formatTime(timestamp) {
   });
 }
 
-// Format Date Only
 function formatDateOnly(timestamp) {
   if (!timestamp || timestamp === "0") return "Unknown";
   
@@ -2367,366 +2255,6 @@ function formatDateOnly(timestamp) {
   });
 }
 
-// Update Card Status
-function updateCardStatus(uid, status, timestamp) {
-  const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
-  if (!card) return;
-
-  const button = card.querySelector('.check-online-btn');
-  if (!button) return;
-  
-  button.classList.remove('checking', 'online', 'offline', 'pending');
-  button.disabled = false;
-  
-  if (status === 'online') {
-    button.classList.add('online');
-    button.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
-    
-    const deviceMeta = card.querySelector('.device-meta');
-    if (deviceMeta) {
-      let onlineIndicator = deviceMeta.querySelector('.online-indicator');
-      if (!onlineIndicator) {
-        onlineIndicator = document.createElement('span');
-        onlineIndicator.className = 'online-indicator visible';
-        deviceMeta.appendChild(onlineIndicator);
-      }
-    }
-    
-    const timerSpan = card.querySelector('.response-timer');
-    if (timerSpan) timerSpan.remove();
-    
-  } else if (status === 'offline') {
-    button.classList.add('offline');
-    button.innerHTML = '<i class="fas fa-times"></i> OFFLINE';
-    
-    const timerSpan = card.querySelector('.response-timer');
-    if (timerSpan) timerSpan.remove();
-    
-    const onlineIndicator = card.querySelector('.online-indicator');
-    if (onlineIndicator) onlineIndicator.remove();
-    
-    setTimeout(() => {
-      if (button.classList.contains('offline')) {
-        button.classList.remove('offline');
-        button.innerHTML = '<i class="fas fa-wifi"></i> CHECK ONLINE';
-      }
-    }, 10000);
-    
-  } else if (status === 'checking') {
-    button.classList.add('checking');
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CHECKING...';
-    button.disabled = true;
-    
-    const deviceMeta = card.querySelector('.device-meta');
-    if (deviceMeta) {
-      let timerSpan = deviceMeta.querySelector('.response-timer');
-      if (!timerSpan) {
-        timerSpan = document.createElement('span');
-        timerSpan.className = 'response-timer';
-        timerSpan.textContent = 'WAITING';
-        deviceMeta.appendChild(timerSpan);
-      }
-    }
-    
-  } else if (status === 'pending') {
-    button.classList.add('pending');
-    button.innerHTML = '<i class="fas fa-hourglass-half"></i> PENDING';
-    
-    const timerSpan = card.querySelector('.response-timer');
-    if (timerSpan) timerSpan.remove();
-    
-    const onlineIndicator = card.querySelector('.online-indicator');
-    if (onlineIndicator) onlineIndicator.remove();
-  }
-}
-
-function clearCheckingTimer(uid) {
-  if (checkingDevices.has(uid)) {
-    const data = checkingDevices.get(uid);
-    if (data.timeoutId) {
-      clearTimeout(data.timeoutId);
-    }
-    checkingDevices.delete(uid);
-  }
-}
-
-// 🔥 MAIN CHECK ONLINE FUNCTION
-async function checkOnline(uid, event) {
-  if (event) event.stopPropagation();
-  
-  if (checkingDevices.has(uid)) {
-    return;
-  }
-  
-  updateCardStatus(uid, 'checking', Date.now());
-  currentReplyUid = uid;
-  showCheckPopup();
-  startCountdown();
-  
-  try {
-    checkingDevices.set(uid, {
-      startTime: Date.now(),
-      timeoutId: null
-    });
-    
-    const timestamp = Date.now();
-    
-    // First API call
-    fetch(`${CHECK_API}/${uid}`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": `Bearer ${authToken}`
-      },
-      body: JSON.stringify({ 
-        available: "checking",
-        timestamp: timestamp
-      })
-    }).then(response => {
-      if (response.status === 401 || response.status === 403) {
-        redirectToLogin();
-        return;
-      }
-      return response.json();
-    })
-    .then(result => {
-      console.log(" Check online API response:", result);
-    })
-    .catch(e => {
-      console.warn(" Check Online API failed:", e);
-    });
-    
-    // Start listening for brosReply via socket
-    // The socket listener will handle the response
-    
-    // Wait 30 seconds before marking as pending
-    const timeoutId = setTimeout(() => {
-      if (checkingDevices.has(uid)) {
-        const device = allDevices.find(d => {
-          const deviceIdFields = [
-            d.id,
-            d.uniqueid,
-            d.deviceId,
-            d.uid,
-            d.uniqueId,
-            d.deviceID
-          ].filter(Boolean);
-          
-          return deviceIdFields.some(id => 
-            id === uid || 
-            id?.toString() === uid?.toString() ||
-            id?.includes(uid) || 
-            uid?.includes(id)
-          );
-        });
-        
-        if (device) {
-          device.status = 'pending';
-          device.lastChecked = Date.now();
-        }
-        
-        updateCardStatus(uid, 'pending', Date.now());
-        clearCheckingTimer(uid);
-        
-        if (currentReplyUid === uid) {
-          document.getElementById('popupStatus').textContent = 'No Immediate Reply';
-          document.getElementById('popupMessage').textContent = 'Device status pending confirmation';
-          document.getElementById('refreshPopupBtn').style.display = 'flex';
-          stopCountdown();
-        }
-      }
-    }, 30000);
-    
-    checkingDevices.get(uid).timeoutId = timeoutId;
-    
-  } catch (e) {
-    console.error("Check online error:", e);
-    updateCardStatus(uid, 'pending', Date.now());
-    clearCheckingTimer(uid);
-  }
-}
-
-// 🔥 SOCKET LISTENERS - CRITICAL FOR ACTIVE DEVICES
-function initSocketListeners() {
-  try {
-    const socketOptions = {
-      transports: ["websocket", "polling"],
-      withCredentials: true
-    };
-    
-    if (authToken) {
-      socketOptions.auth = { token: authToken };
-      socketOptions.query = { token: authToken, sessionId: sessionId };
-    }
-    
-    socket = io(BASE_URL || undefined, socketOptions);
-
-    // 🔥 Listen for ALL brosReply updates
-    socket.on("brosReplyUpdate", (payload) => {
-      console.log("📡 brosReplyUpdate received:", payload);
-      
-      if (payload && payload.uid && payload.data) {
-        const uid = payload.uid;
-        const brosReplyData = payload.data;
-        
-        // Check if this device should be active
-        const isActive = isDeviceActive(brosReplyData);
-        
-        if (isActive) {
-          // Add to active devices set
-          activeDevices15Min.add(uid);
-          
-          // Update the device card
-          updateDeviceCardStatus(uid, true);
-          
-          // Update counter
-          updateActiveCounter();
-          
-          console.log(`✅ Device ${uid} is ACTIVE (within 15 min)`);
-          
-          // If this is the device we're checking in popup
-          if (currentReplyUid === uid) {
-            stopCountdown();
-            document.getElementById('popupStatus').textContent = 'Device Online ✓';
-            document.getElementById('popupMessage').textContent = 'Device confirmed online (active within 15 min)';
-            document.getElementById('refreshPopupBtn').style.display = 'flex';
-          }
-        } else {
-          // Remove from active devices if it was there
-          if (activeDevices15Min.has(uid)) {
-            activeDevices15Min.delete(uid);
-            updateDeviceCardStatus(uid, false);
-            updateActiveCounter();
-            console.log(`❌ Device ${uid} is NO LONGER ACTIVE`);
-          }
-        }
-        
-        // Also update the card status based on checking state
-        if (checkingDevices.has(uid)) {
-          clearCheckingTimer(uid);
-          if (isActive) {
-            updateCardStatus(uid, 'online', Date.now());
-          } else {
-            updateCardStatus(uid, 'pending', Date.now());
-          }
-        }
-      }
-    });
-    
-    // Listen for device responses
-    socket.on("device_response", (data) => {
-      console.log("📡 device_response received:", data);
-      if (data && data.uid && data.available) {
-        const isActive = isDeviceActive(data);
-        if (isActive) {
-          activeDevices15Min.add(data.uid);
-          updateDeviceCardStatus(data.uid, true);
-          updateActiveCounter();
-        }
-      }
-    });
-    
-    // Listen for devicesLive updates
-    socket.on("devicesLive", (payload) => {
-      if (payload && Array.isArray(payload.data)) {
-        allDevices = (payload.data || []).sort((a, b) => {
-          const timeA = Number(b.joinedAt || b.installTime || 0);
-          const timeB = Number(a.joinedAt || a.installTime || 0);
-          return timeA - timeB;
-        });
-        
-        allDevices = assignSerialNumbers(allDevices);
-        
-        document.getElementById("totalDevices").textContent = allDevices.length;
-        updateLoadingCounter(allDevices.length);
-        
-        const currentSearch = document.getElementById("search").value.toLowerCase();
-        renderList(currentSearch);
-        
-        setTimeout(() => {
-          window.scrollTo(0, scrollPosition);
-        }, 10);
-      }
-    });
-    
-    // Listen for like updates
-    socket.on("likeUpdate", (data) => {
-      if (data && data.uid) {
-        const device = allDevices.find(d => {
-          const deviceIdFields = [
-            d.id,
-            d.uniqueid,
-            d.deviceId,
-            d.uid,
-            d.uniqueId,
-            d.deviceID
-          ].filter(Boolean);
-          
-          return deviceIdFields.some(id => 
-            id === data.uid || 
-            id?.toString() === data.uid?.toString()
-          );
-        });
-        
-        if (device) {
-          device.likedByUser = data.liked || false;
-          updateLikeUI(data.uid, data.liked || false);
-        }
-      }
-    });
-    
-    // Listen for device deletions
-    socket.on("deviceDeleted", (data) => {
-      if (data && data.uid) {
-        allDevices = allDevices.filter(device => {
-          const deviceIdFields = [
-            device.id,
-            device.uniqueid,
-            device.deviceId,
-            device.uid,
-            device.uniqueId,
-            device.deviceID
-          ].filter(Boolean);
-          
-          return !deviceIdFields.some(id => 
-            id === data.uid || 
-            id?.toString() === data.uid?.toString()
-          );
-        });
-        
-        activeDevices15Min.delete(data.uid);
-        updateActiveCounter();
-        
-        document.getElementById("totalDevices").textContent = allDevices.length;
-        updateLoadingCounter(allDevices.length);
-        renderList(document.getElementById("search").value.toLowerCase());
-      }
-    });
-    
-    socket.on("connect_error", (err) => {
-      console.warn("⚠️ Socket connection error:", err.message);
-      if (err.message.includes("auth") || err.message.includes("token")) {
-        redirectToLogin();
-      }
-    });
-    
-    socket.on("connect", () => {
-      console.log("✅ Socket connected successfully with token");
-    });
-    
-    socket.on("disconnect", (reason) => {
-      console.log("❌ Socket disconnected:", reason);
-    });
-    
-    return socket;
-  } catch (e) {
-    console.error("❌ Socket init failed:", e);
-    return null;
-  }
-}
-
-// Render Device Card
 function renderDevice(d, index) {
   const uid = d.id || d.uniqueid || d.uid || d.deviceId || d.uniqueId || d.deviceID;
   const brand = d.brand || "Unknown";
@@ -2741,7 +2269,7 @@ function renderDevice(d, index) {
   const lastSeen = formatTime(d.lastSeen);
   
   const isChecking = checkingDevices.has(uid);
-  const isActive = activeDevices15Min.has(uid);
+  const isActive = activeDevicesSet.has(uid);
   
   const serialNumber = d.serialNumber !== undefined ? d.serialNumber : index;
   const isLatestDevice = d.isLatest || (index === 0);
@@ -2855,7 +2383,9 @@ function renderDevice(d, index) {
   return card;
 }
 
-// Fetch Devices
+// ============================================
+// 🔥 DEVICE LIST MANAGEMENT
+// ============================================
 async function fetchDevices() {
   try {
     showLoadingAnimation();
@@ -2954,7 +2484,6 @@ async function fetchDevices() {
   }
 }
 
-// Render List
 function renderList(searchQuery = '') {
   const q = searchQuery || document.getElementById("search").value.toLowerCase();
   const box = document.getElementById("devicesList");
@@ -2999,7 +2528,9 @@ function renderList(searchQuery = '') {
   });
 }
 
-// DOM Content Loaded
+// ============================================
+// 🔥 INITIALIZATION
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
   console.log("✅ DOM Content Loaded");
   
@@ -3008,13 +2539,34 @@ document.addEventListener('DOMContentLoaded', function() {
   showLoadingAnimation();
   updateActiveCounter();
   
-  initPopupEvents();
+  // Initialize popup events
+  document.getElementById('refreshPopupBtn').onclick = () => {
+    if (currentReplyUid) {
+      hideCheckPopup();
+      checkOnline(currentReplyUid);
+    }
+  };
   
+  document.getElementById('closePopupBtn').onclick = hideCheckPopup;
+  
+  document.getElementById('confirmDeleteBtn').onclick = () => {
+    if (currentDeleteUid) {
+      deleteDevice(currentDeleteUid);
+    }
+  };
+  
+  document.getElementById('cancelDeleteBtn').onclick = hideDeleteConfirm;
+  
+  document.getElementById('deleteConfirmPopup').addEventListener('click', function(e) {
+    if (e.target === this) {
+      hideDeleteConfirm();
+    }
+  });
+  
+  // Initialize socket
   socket = initSocketListeners();
   
-  // Clean up old active devices every minute
-  setInterval(cleanupOldActiveDevices, 60000);
-  
+  // Setup search
   let searchTimer;
   document.getElementById("search").addEventListener("input", function() {
     clearTimeout(searchTimer);
@@ -3032,16 +2584,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Clear saved data on fresh load
   if (!window.performance.navigation || window.performance.navigation.type !== 2) {
     localStorage.removeItem('deviceListScrollPosition');
     localStorage.removeItem('deviceListSearchQuery');
   }
   
+  // Initial fetch
   setTimeout(fetchDevices, 500);
   
-  // Refresh devices every 30 seconds
-  setInterval(fetchDevices, 30000);
+  // Auto-refresh devices every 60 seconds
+  setInterval(fetchDevices, 60000);
   
+  // Handle page visibility
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
       const savedScroll = localStorage.getItem('deviceListScrollPosition');
@@ -3051,6 +2606,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // Save state before unload
   window.addEventListener('beforeunload', function() {
     localStorage.setItem('deviceListScrollPosition', window.scrollY);
     localStorage.setItem('deviceListSearchQuery', document.getElementById("search").value);
