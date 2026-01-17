@@ -10,7 +10,7 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <style>
-/* ALL YOUR EXISTING CSS STYLES - EXACTLY AS BEFORE */
+/* ALL YOUR EXISTING CSS STYLES */
 * {
   margin: 0;
   padding: 0;
@@ -111,7 +111,6 @@ body {
   50% { transform: scale(1.05); }
 }
 
-/* FORCE PARENT ROW */
 .top-bar {
   display: flex;
   align-items: center;
@@ -128,13 +127,11 @@ body {
   white-space: nowrap;
 }
 
-/* COUNTERS MUST NOT BREAK */
 .device-count,
 .active-badge {
   flex: 0 0 auto;
 }
 
-/* TOTAL DEVICES COUNTER */
 .device-count {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
@@ -150,7 +147,6 @@ body {
   justify-content: center;
 }
 
-/* ACTIVE COUNTER */
 .active-badge {
   background: rgba(0, 0, 0, 0.4);
   color: white;
@@ -166,19 +162,17 @@ body {
   justify-content: center;
 }
 
-/* ACTIVE STYLE */
 .active-badge.active {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 
-/* TEXT */
 .device-count span,
 .active-count {
   font-weight: 800;
   font-size: 14px;
 }
 
-/* ===== INFINITY LOOP TEXT ANIMATION ===== */
+/* ===== INFINITY LOOP ===== */
 .infinity-loop-container {
   background: linear-gradient(135deg, #88d7fe, #24d0fb);
   padding: 12px 0;
@@ -311,7 +305,7 @@ body {
   color: inherit;
 }
 
-/* ===== COMPACT SEARCH BAR ===== */
+/* ===== SEARCH BAR ===== */
 .search-bar {
   background: white;
   padding: 16px 20px;
@@ -359,7 +353,7 @@ body {
   z-index: 2;
 }
 
-/* ===== MAIN CONTENT WITH GRID LAYOUT ===== */
+/* ===== MAIN CONTENT ===== */
 .main {
   padding: 0 16px 20px;
   max-width: 1200px;
@@ -372,7 +366,7 @@ body {
   gap: 16px;
 }
 
-/* ===== SUPER COMPACT CARD DESIGN ===== */
+/* ===== DEVICE CARD ===== */
 .device-card {
   background: white;
   border-radius: var(--radius-md);
@@ -405,7 +399,6 @@ body {
   z-index: 1;
 }
 
-/* ===== ALL BUTTONS IN TOP RIGHT CORNER ===== */
 .top-buttons-container {
   position: absolute;
   top: 8px;
@@ -416,7 +409,6 @@ body {
   z-index: 4;
 }
 
-/* ===== SERIAL NUMBER BADGE ===== */
 .serial-badge {
   width: 32px;
   height: 32px;
@@ -456,7 +448,6 @@ body {
   box-shadow: 0 3px 8px rgba(107, 114, 128, 0.4);
 }
 
-/* ===== LIKE BUTTON ===== */
 .like-btn {
   width: 32px;
   height: 32px;
@@ -491,7 +482,6 @@ body {
   box-shadow: 0 4px 14px rgba(236, 72, 153, 0.6);
 }
 
-/* ===== DELETE BUTTON ===== */
 .delete-btn {
   width: 32px;
   height: 32px;
@@ -515,7 +505,6 @@ body {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
-/* CARD HEADER */
 .card-header {
   display: flex;
   align-items: center;
@@ -585,7 +574,6 @@ body {
   position: relative;
 }
 
-/* SIM INFO */
 .sim-info {
   background: var(--gray-50);
   padding: 6px 12px;
@@ -643,7 +631,6 @@ body {
   text-overflow: ellipsis;
 }
 
-/* DATE/TIME INFO */
 .time-info {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -682,7 +669,6 @@ body {
   font-size: 9px;
 }
 
-/* CARD FOOTER */
 .card-footer {
   display: flex;
   align-items: center;
@@ -769,7 +755,6 @@ body {
   min-width: 80px;
 }
 
-/* PENDING STATUS */
 .check-online-btn.pending {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   border-color: #d97706;
@@ -777,7 +762,6 @@ body {
   min-width: 80px;
 }
 
-/* EMPTY STATE */
 .empty {
   text-align: center;
   padding: 40px 20px;
@@ -1124,7 +1108,6 @@ body {
   transform: translateY(-2px);
 }
 
-/* ONLINE STATUS INDICATOR */
 .online-indicator {
   position: absolute;
   top: 0;
@@ -1141,7 +1124,6 @@ body {
   display: block;
 }
 
-/* RESPONSE TIMER */
 .response-timer {
   background: var(--warning);
   color: white;
@@ -1729,18 +1711,18 @@ body {
       <span class="live">LIVE</span>
     </div>
     
-   <div class="top-bar">
-  <div class="user-info">
-    <div class="device-count">
-      <i class="fas fa-mobile-alt"></i>
-      Total: <span id="totalDevices">0</span>
+    <div class="top-bar">
+      <div class="user-info">
+        <div class="device-count">
+          <i class="fas fa-mobile-alt"></i>
+          Total: <span id="totalDevices">0</span>
+        </div>
+        <div class="active-badge" id="activeCounter">
+          <i class="fas fa-clock"></i>
+          Last 15 Min: <span class="active-count" id="activeCount">0</span>
+        </div>
+      </div>
     </div>
-    <div class="active-badge" id="activeCounter">
-      <i class="fas fa-clock"></i>
-      Last 15 Min: <span class="active-count" id="activeCount">0</span>
-    </div>
-  </div>
-</div>
   </div>
 </div>
 
@@ -1749,7 +1731,7 @@ body {
     <div class="infinity-loop-content">
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
-      Welcome to our service!
+        Welcome to our service!
       </div>
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
@@ -1757,18 +1739,17 @@ body {
       </div>
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
-      Welcome to our service!
+        Welcome to our service!
       </div>
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
-   Welcome to our service!
+        Welcome to our service!
       </div>
     </div>
-    <!-- Duplicate for seamless loop -->
     <div class="infinity-loop-content">
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
-       Welcome to our service!
+        Welcome to our service!
       </div>
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
@@ -1776,11 +1757,11 @@ body {
       </div>
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
-       Welcome to our service!
+        Welcome to our service!
       </div>
       <div class="infinity-text">
         <i class="fas fa-exclamation-circle"></i>
-       Welcome to our service!
+        Welcome to our service!
       </div>
     </div>
   </div>
@@ -1864,18 +1845,13 @@ let sessionId = null;
 let currentDeleteUid = null;
 let deviceCardMap = new Map();
 
-// ✅ ACTIVE DEVICES DUAL SOURCE SYSTEM
+// ✅ ACTIVE DEVICES DUAL SOURCE SYSTEM - FIXED
 let activeDevicesFromSocket = new Map();
 let activeDevicesFromAPI = new Map();
 let socketConnected = false;
 
 // ✅ CHECKING STATUS for manual check
 let manualCheckStatus = new Map();
-
-// ✅ SCROLL FIX VARIABLES
-let isScrolling = false;
-let scrollTimeout;
-let lastScrollTop = 0;
 
 // ✅ AUTH FUNCTIONS
 function checkAuth() {
@@ -2015,7 +1991,7 @@ function handleCountdownEnd() {
   }
 }
 
-// ✅ ACTIVE BADGE DUAL SOURCE FUNCTIONS
+// ✅ ACTIVE BADGE DUAL SOURCE FUNCTIONS - FIXED
 function updateActiveBadge() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
@@ -2175,7 +2151,7 @@ async function fetchAllActiveDevicesFromAPI() {
   return false;
 }
 
-// ✅ Process API active devices
+// ✅ Process API active devices - FIXED (No clearing)
 function processAPIActiveDevices(apiData) {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
@@ -2185,9 +2161,7 @@ function processAPIActiveDevices(apiData) {
     return;
   }
   
-  // Clear only API data, keep socket data
-  activeDevicesFromAPI.clear();
-  
+  // Don't clear API data - just update with new data
   Object.entries(apiData).forEach(([uid, data]) => {
     if (!uid || !data || typeof data !== 'object') return;
     
@@ -2208,7 +2182,7 @@ function processAPIActiveDevices(apiData) {
   updateActiveBadge();
 }
 
-// ✅ Process Socket active devices
+// ✅ Process Socket active devices - FIXED (No clearing)
 function processSocketActiveDevices(socketData) {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
@@ -2218,9 +2192,7 @@ function processSocketActiveDevices(socketData) {
     return;
   }
   
-  // Clear only socket data, keep API data
-  activeDevicesFromSocket.clear();
-  
+  // Don't clear socket data - just update with new data
   Object.entries(socketData).forEach(([uid, data]) => {
     if (!uid || !data || typeof data !== 'object') return;
     
@@ -2245,14 +2217,9 @@ function processSocketActiveDevices(socketData) {
 async function initializeActiveBadge() {
   console.log("📊 Initializing active badge with dual sources...");
   
-  // Clear all data
-  activeDevicesFromSocket.clear();
-  activeDevicesFromAPI.clear();
-  
-  // ✅ SOURCE 1: API (Always fetch on load)
+  // Don't clear existing data - just add new data
   await fetchAllActiveDevicesFromAPI();
   
-  // ✅ SOURCE 2: Socket (Will be populated when socket connects)
   console.log(`📊 Active badge initialized. API: ${activeDevicesFromAPI.size}, Socket: ${activeDevicesFromSocket.size}`);
 }
 
@@ -2624,7 +2591,7 @@ function formatDateOnly(timestamp) {
   });
 }
 
-// ✅ SOCKET LISTENERS WITH DUAL SOURCE SYSTEM
+// ✅ SOCKET LISTENERS WITH DUAL SOURCE SYSTEM - FIXED
 function initSocketListeners() {
   try {
     const socketOptions = {
@@ -2806,7 +2773,7 @@ function initSocketListeners() {
       console.log("❌ Socket disconnected:", reason);
       socketConnected = false;
       
-      // IMPORTANT: When socket disconnects, DO NOT clear data
+      // IMPORTANT FIX: When socket disconnects, DO NOT clear data
       // Keep existing socket data (it will expire naturally)
       console.log("📡 Socket disconnected, but keeping existing socket data");
       
@@ -3088,12 +3055,8 @@ function renderDevice(d, index) {
   card.onclick = (e) => {
     if (!e.target.closest('.top-buttons-container') && 
         !e.target.closest('.check-online-btn')) {
-      scrollPosition = window.scrollY;
-      localStorage.setItem('deviceListScrollPosition', scrollPosition);
-      const searchInput = document.getElementById("search");
-      if (searchInput) {
-        localStorage.setItem('deviceListSearchQuery', searchInput.value);
-      }
+      // Save scroll position and search before navigating
+      saveScrollAndSearchState();
       location.href = `device-details.html?id=${uid}`;
     }
   };
@@ -3184,19 +3147,9 @@ async function fetchDevices() {
     setTimeout(() => {
       hideLoadingAnimation();
       
-      const savedSearch = localStorage.getItem('deviceListSearchQuery') || '';
-      const savedScroll = localStorage.getItem('deviceListScrollPosition') || 0;
+      // Load saved state
+      restoreScrollAndSearchState();
       
-      const searchInput = document.getElementById("search");
-      if (searchInput && savedSearch) {
-        searchInput.value = savedSearch;
-      }
-      
-      renderList(savedSearch);
-      
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScroll));
-      }, 100);
     }, 1000);
     
   } catch (err) {
@@ -3266,26 +3219,32 @@ function renderList(searchQuery = '') {
   });
 }
 
-// ✅ SCROLL FIX FUNCTIONS
-function initScrollFix() {
-  let scrollTimeout;
-  let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+// ✅ SCROLL & SEARCH STATE MANAGEMENT
+function saveScrollAndSearchState() {
+  scrollPosition = window.scrollY;
+  localStorage.setItem('deviceListScrollPosition', scrollPosition);
   
-  window.addEventListener('scroll', function() {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    // Clear the timeout on scroll
-    clearTimeout(scrollTimeout);
-    
-    // Set a timeout to detect when scrolling stops
-    scrollTimeout = setTimeout(function() {
-      // Save current scroll position
-      scrollPosition = scrollTop;
-      localStorage.setItem('deviceListScrollPosition', scrollPosition);
-    }, 100);
-    
-    lastScrollTop = scrollTop;
-  });
+  const searchInput = document.getElementById("search");
+  if (searchInput) {
+    localStorage.setItem('deviceListSearchQuery', searchInput.value);
+  }
+}
+
+function restoreScrollAndSearchState() {
+  const savedSearch = localStorage.getItem('deviceListSearchQuery') || '';
+  const savedScroll = localStorage.getItem('deviceListScrollPosition') || 0;
+  
+  const searchInput = document.getElementById("search");
+  if (searchInput && savedSearch) {
+    searchInput.value = savedSearch;
+  }
+  
+  renderList(savedSearch);
+  
+  // Restore scroll position after rendering
+  setTimeout(() => {
+    window.scrollTo(0, parseInt(savedScroll));
+  }, 50);
 }
 
 // ✅ INITIALIZE EVERYTHING
@@ -3313,9 +3272,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize socket listeners
   socket = initSocketListeners();
   
-  // Initialize scroll fix
-  initScrollFix();
-  
   // Run validity checks every 30 seconds
   setInterval(checkActiveBadgeValidity, 30000);
   
@@ -3341,8 +3297,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Check if this is a back/forward navigation
-  if (!window.performance.navigation || window.performance.navigation.type !== 2) {
+  // Clear saved state if not back/forward navigation
+  const navigationEntries = window.performance.getEntriesByType("navigation");
+  if (navigationEntries.length > 0 && navigationEntries[0].type !== "back_forward") {
     localStorage.removeItem('deviceListScrollPosition');
     localStorage.removeItem('deviceListSearchQuery');
   }
@@ -3361,23 +3318,23 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle page visibility changes
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
-      const savedScroll = localStorage.getItem('deviceListScrollPosition');
-      if (savedScroll) {
-        setTimeout(() => window.scrollTo(0, parseInt(savedScroll)), 100);
-      }
+      restoreScrollAndSearchState();
     }
   });
   
-  // Save scroll position and search query before page unload
-  window.addEventListener('beforeunload', function() {
-    localStorage.setItem('deviceListScrollPosition', window.scrollY);
-    const searchInput = document.getElementById("search");
-    if (searchInput) {
-      localStorage.setItem('deviceListSearchQuery', searchInput.value);
-    }
+  // Save state before page unload
+  window.addEventListener('beforeunload', saveScrollAndSearchState);
+  
+  // Handle scroll position
+  window.addEventListener('scroll', function() {
+    clearTimeout(window.scrollTimer);
+    window.scrollTimer = setTimeout(function() {
+      saveScrollAndSearchState();
+    }, 100);
   });
 });
 
+// ✅ EXPORT FUNCTIONS TO GLOBAL SCOPE
 window.toggleLike = toggleLike;
 window.showDeleteConfirm = showDeleteConfirm;
 window.checkOnline = checkOnline;
