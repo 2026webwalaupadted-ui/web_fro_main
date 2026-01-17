@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,6 +10,7 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <style>
+/* ALL YOUR EXISTING CSS STYLES - EXACTLY AS BEFORE */
 * {
   margin: 0;
   padding: 0;
@@ -1162,11 +1164,13 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .loading-animation.hidden {
@@ -1177,9 +1181,10 @@ body {
 .loader-container {
   text-align: center;
   padding: 30px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  border: transparent;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .loader {
@@ -1239,10 +1244,10 @@ body {
   left: 40%;
   width: 20%;
   height: 20%;
-  background: rgb(0, 0, 0);
+  background: rgb(0, 94, 255);
   border-radius: 50%;
   animation: pulse-core 1.5s ease-in-out infinite alternate;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 94, 255, 0.8);
 }
 
 @keyframes rotate {
@@ -1277,7 +1282,7 @@ body {
 }
 
 .loader-text {
-  color: transparent;
+  color: white;
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 12px;
@@ -1285,7 +1290,7 @@ body {
 }
 
 .loader-subtext {
-  color: transparent;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 13px;
   font-weight: 500;
   max-width: 250px;
@@ -1294,14 +1299,14 @@ body {
 }
 
 .loader-counter {
-  color: transparent;
+  color: white;
   font-size: 28px;
   font-weight: 800;
   margin: 15px 0 8px;
 }
 
 .loader-counter-label {
-  color: transparent;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1311,7 +1316,7 @@ body {
 .loader-progress {
   width: 100%;
   height: 4px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   margin-top: 20px;
   overflow: hidden;
@@ -1319,7 +1324,7 @@ body {
 
 .loader-progress-bar {
   height: 100%;
-  background: transparent;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
   border-radius: 2px;
   width: 0%;
   animation: progress-load 2s ease-in-out infinite alternate;
@@ -1727,9 +1732,10 @@ body {
    <div class="top-bar">
   <div class="user-info">
     <div class="device-count">
-      Total: <span id="totalDevices">--</span>
+      <i class="fas fa-mobile-alt"></i>
+      Total: <span id="totalDevices">0</span>
     </div>
-    <div class="active-badge active" id="activeCounter">
+    <div class="active-badge" id="activeCounter">
       <i class="fas fa-clock"></i>
       Last 15 Min: <span class="active-count" id="activeCount">0</span>
     </div>
@@ -1814,13 +1820,15 @@ body {
 
 <div class="main">
   <div class="devices" id="devicesList">
+    <!-- Devices will be loaded here -->
   </div>
 </div>
 
 <script type="module">
+// ✅ CONFIGURATION
 let API_BASE, BASE_URL;
 try {
-  API_BASE = import.meta.env?.VITE_API_BASE;
+  API_BASE = import.meta.env?.VITE_API_BASE || "https://webback-production-c9c7.up.railway.app";
   BASE_URL = API_BASE;
   
   console.log("✅ Environment loaded:");
@@ -1828,18 +1836,21 @@ try {
   console.log("BASE_URL:", BASE_URL);
 } catch (error) {
   console.error("❌ Environment loading failed:", error);
+  API_BASE = "https://webback-production-c9c7.up.railway.app";
+  BASE_URL = API_BASE;
 }
 
 // ✅ API ENDPOINTS
 const DEVICE_API = `${BASE_URL}/api/devices`;
 const CHECK_API = `${BASE_URL}/api/check-online`;
 const BROS_REPLY_API = `${BASE_URL}/api/brosreply`;
+const BROS_REPLY_ALL_API = `${BASE_URL}/api/brosreply-all`; // ✅ For active badge
 const VERIFY_TOKEN_API = `${BASE_URL}/api/verify-token`;
 const DELETE_DEVICE_API = `${BASE_URL}/api/delete`;
 const LIKE_UNLIKE_API = `${BASE_URL}/api/likeunlike`;
 const LIKES_API = `${BASE_URL}/api/likes`;
 
-// Global variables
+// ✅ GLOBAL VARIABLES
 let allDevices = [];
 let checkingDevices = new Map();
 let countdownInterval = null;
@@ -1853,12 +1864,13 @@ let sessionId = null;
 let currentDeleteUid = null;
 let deviceCardMap = new Map();
 
-// ✅ ACTIVE DEVICES for badge ONLY (updated from live data)
-let activeDevicesForBadge = new Map(); // uid -> {timestamp, checkedAt}
+// ✅ ACTIVE DEVICES for badge ONLY
+let activeDevicesForBadge = new Map(); // uid -> {timestamp, checkedAt, available}
 
 // ✅ CHECKING STATUS for manual check
 let manualCheckStatus = new Map(); // uid -> {status: 'checking'|'online'|'offline'|'pending', timestamp}
 
+// ✅ AUTH FUNCTIONS
 function checkAuth() {
   authToken = localStorage.getItem('mr_robot_token');
   sessionId = localStorage.getItem('mr_robot_session_id');
@@ -1869,6 +1881,7 @@ function checkAuth() {
     return false;
   }
   
+  console.log('✅ Auth token found');
   return true;
 }
 
@@ -1880,76 +1893,50 @@ function redirectToLogin() {
   window.location.href = 'index.html';
 }
 
-async function verifyTokenWithServer() {
-  try {
-    const response = await fetch(VERIFY_TOKEN_API, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
-      },
-      body: JSON.stringify({ sessionId: sessionId })
-    });
-    
-    const data = await response.json();
-    
-    if (!data.valid) {
-      console.log('❌ Token verification failed:', data.message);
-      redirectToLogin();
-      return false;
-    }
-    
-    console.log('✅ Token verified successfully');
-    return true;
-    
-  } catch (error) {
-    console.error('❌ Token verification error:', error);
-    return true;
-  }
-}
-
-function assignSerialNumbers(devices) {
-  const totalDevices = devices.length;
-  
-  return devices.map((device, index) => {
-    device.serialNumber = totalDevices - 1 - index;
-    device.isLatest = index === 0;
-    device.isOldest = index === devices.length - 1;
-    return device;
-  });
-}
-
+// ✅ LOADING FUNCTIONS
 function showLoadingAnimation() {
   const loadingEl = document.getElementById('loadingAnimation');
-  if (loadingEl) loadingEl.classList.remove('hidden');
+  if (loadingEl) {
+    loadingEl.classList.remove('hidden');
+    loadingEl.style.display = 'flex';
+  }
 }
 
 function hideLoadingAnimation() {
   const loadingEl = document.getElementById('loadingAnimation');
   if (loadingEl) {
+    loadingEl.classList.add('hidden');
     setTimeout(() => {
-      loadingEl.classList.add('hidden');
-      setTimeout(() => {
-        if (loadingEl.parentNode) loadingEl.style.display = 'none';
-      }, 500);
-    }, 300);
+      loadingEl.style.display = 'none';
+    }, 500);
   }
 }
 
 function updateLoadingCounter(total) {
-  document.getElementById('loadingTotalCount').textContent = total;
+  const counter = document.getElementById('loadingTotalCount');
+  if (counter) {
+    counter.textContent = total || 0;
+  }
 }
 
+// ✅ POPUP FUNCTIONS
 function showCheckPopup() {
-  document.getElementById('checkPopup').classList.add('active');
-  document.getElementById('popupStatus').textContent = 'Waiting for reply…';
-  document.getElementById('popupMessage').textContent = 'Checking device status...';
-  document.getElementById('refreshPopupBtn').style.display = 'none';
-  document.getElementById('countdownTimer').style.display = 'block';
+  const popup = document.getElementById('checkPopup');
+  const popupStatus = document.getElementById('popupStatus');
+  const popupMessage = document.getElementById('popupMessage');
+  const refreshBtn = document.getElementById('refreshPopupBtn');
+  const countdownTimer = document.getElementById('countdownTimer');
+  
+  if (popup) popup.classList.add('active');
+  if (popupStatus) popupStatus.textContent = 'Waiting for reply…';
+  if (popupMessage) popupMessage.textContent = 'Checking device status...';
+  if (refreshBtn) refreshBtn.style.display = 'none';
+  if (countdownTimer) countdownTimer.style.display = 'block';
 }
 
 function hideCheckPopup() {
-  document.getElementById('checkPopup').classList.remove('active');
+  const popup = document.getElementById('checkPopup');
+  if (popup) popup.classList.remove('active');
   stopCountdown();
   currentReplyUid = null;
 }
@@ -1980,26 +1967,40 @@ function updateCountdownDisplay() {
   const timerEl = document.getElementById('countdownTimer');
   const progressEl = document.getElementById('progressFill');
   
-  timerEl.textContent = `${countdownSeconds}s`;
-  const percentage = (countdownSeconds / 30) * 100;
-  progressEl.style.width = `${percentage}%`;
+  if (timerEl) {
+    timerEl.textContent = `${countdownSeconds}s`;
+    
+    if (countdownSeconds <= 10) {
+      timerEl.className = 'check-popup-timer critical';
+    } else if (countdownSeconds <= 20) {
+      timerEl.className = 'check-popup-timer warning';
+    } else {
+      timerEl.className = 'check-popup-timer';
+    }
+  }
   
-  if (countdownSeconds <= 10) {
-    timerEl.className = 'check-popup-timer critical';
-    progressEl.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
-  } else if (countdownSeconds <= 20) {
-    timerEl.className = 'check-popup-timer warning';
-    progressEl.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
-  } else {
-    timerEl.className = 'check-popup-timer';
-    progressEl.style.background = 'linear-gradient(90deg, var(--primary), #3b82f6)';
+  if (progressEl) {
+    const percentage = (countdownSeconds / 30) * 100;
+    progressEl.style.width = `${percentage}%`;
+    
+    if (countdownSeconds <= 10) {
+      progressEl.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+    } else if (countdownSeconds <= 20) {
+      progressEl.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+    } else {
+      progressEl.style.background = 'linear-gradient(90deg, var(--primary), #3b82f6)';
+    }
   }
 }
 
 function handleCountdownEnd() {
-  document.getElementById('popupStatus').textContent = 'No Online Reply';
-  document.getElementById('popupMessage').textContent = 'Device did not respond within 30 seconds';
-  document.getElementById('refreshPopupBtn').style.display = 'flex';
+  const popupStatus = document.getElementById('popupStatus');
+  const popupMessage = document.getElementById('popupMessage');
+  const refreshBtn = document.getElementById('refreshPopupBtn');
+  
+  if (popupStatus) popupStatus.textContent = 'No Online Reply';
+  if (popupMessage) popupMessage.textContent = 'Device did not respond within 30 seconds';
+  if (refreshBtn) refreshBtn.style.display = 'flex';
   
   if (currentReplyUid) {
     updateSingleCardStatus(currentReplyUid, 'pending');
@@ -2007,48 +2008,37 @@ function handleCountdownEnd() {
   }
 }
 
-function updatePopupFromReply(data, message) {
-  if (!currentReplyUid) return;
-  
-  const isOnlineReply = isDeviceOnlineMessage(message);
-  
-  if (isOnlineReply) {
-    stopCountdown();
-    document.getElementById('popupStatus').textContent = 'Device Online ✓';
-    document.getElementById('popupMessage').textContent = 'Device confirmed online';
-    document.getElementById('refreshPopupBtn').style.display = 'flex';
-  } else {
-    document.getElementById('popupStatus').textContent = 'Status Pending';
-    document.getElementById('popupMessage').textContent = 'Device status pending confirmation';
-    document.getElementById('refreshPopupBtn').style.display = 'flex';
-  }
-}
-
-/* ===== ACTIVE BADGE FUNCTIONS (ONLY FOR BADGE) ===== */
+// ✅ ACTIVE BADGE FUNCTIONS
 function updateActiveBadge() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
   // Remove expired devices
   for (const [uid, deviceData] of activeDevicesForBadge.entries()) {
-    if (deviceData.timestamp < fifteenMinutesAgo) {
+    if (deviceData.checkedAt < fifteenMinutesAgo) {
       activeDevicesForBadge.delete(uid);
     }
   }
   
   // Count active devices
   const activeCount = activeDevicesForBadge.size;
-  document.getElementById('activeCount').textContent = activeCount;
-  
-  // Update badge style
+  const activeCountEl = document.getElementById('activeCount');
   const badge = document.getElementById('activeCounter');
-  if (activeCount > 0) {
-    badge.classList.add('active');
-  } else {
-    badge.classList.remove('active');
+  
+  if (activeCountEl) {
+    activeCountEl.textContent = activeCount;
+  }
+  
+  if (badge) {
+    if (activeCount > 0) {
+      badge.classList.add('active');
+    } else {
+      badge.classList.remove('active');
+    }
   }
   
   console.log(`✅ Active Badge Count: ${activeCount} devices`);
+  return activeCount;
 }
 
 // ✅ Check if message is "device is online" type
@@ -2057,22 +2047,15 @@ function isDeviceOnlineMessage(message) {
   
   const msgStr = String(message).toLowerCase().trim();
   
-  // Exact phrases that mean device is online
-  const onlinePhrases = [
-    "device is online",
-    "device online",
-    "online device",
-    "true",
-    "device is active",
-    "device active",
-    "available: device is online",
-    "available: true"
-  ];
-  
-  return onlinePhrases.some(phrase => msgStr.includes(phrase));
+  return msgStr.includes("device is online") || 
+         msgStr.includes("available: device is online") ||
+         msgStr === "true" ||
+         msgStr === "device online" ||
+         msgStr === "online" ||
+         msgStr.includes("active: true");
 }
 
-// ✅ Add device to active badge ONLY (NOT to card)
+// ✅ Add device to active badge
 function addToActiveBadgeOnly(uid, timestamp, checkedAt, available) {
   if (!isDeviceOnlineMessage(available)) {
     console.log(`❌ Not adding ${uid} to active badge - not online message:`, available);
@@ -2103,77 +2086,65 @@ function addToActiveBadgeOnly(uid, timestamp, checkedAt, available) {
 function checkActiveBadgeValidity() {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
+  let updated = false;
   
   for (const [uid, deviceData] of activeDevicesForBadge.entries()) {
     if (deviceData.checkedAt < fifteenMinutesAgo) {
-      console.log(`⏰ Removing ${uid} from active badge (expired)`);
       activeDevicesForBadge.delete(uid);
+      updated = true;
+      console.log(`⏰ Removing ${uid} from active badge (expired)`);
     }
   }
   
-  updateActiveBadge();
+  if (updated) {
+    updateActiveBadge();
+  }
 }
 
-// ✅ Initialize active badge from ALL data
-async function initializeActiveBadge(devices) {
-  const now = Date.now();
-  const fifteenMinutesAgo = now - (15 * 60 * 1000);
-  
-  activeDevicesForBadge.clear();
-  
-  // ✅ SOURCE 1: Check device data
-  devices.forEach(device => {
-    const uid = device.id || device.uniqueid || device.uid || device.deviceId;
-    if (!uid) return;
-    
-    // Check if device has "available: device is online" in device data
-    if (device.available && isDeviceOnlineMessage(device.available)) {
-      const lastSeen = Number(device.lastSeen || 0);
-      const lastChecked = Number(device.lastChecked || device.timestamp || 0);
-      const timestampToUse = Math.max(lastSeen, lastChecked, device.timestamp || 0);
-      
-      if (timestampToUse > fifteenMinutesAgo) {
-        activeDevicesForBadge.set(uid, {
-          timestamp: timestampToUse,
-          checkedAt: timestampToUse,
-          available: device.available,
-          addedAt: now,
-          source: 'device_data'
-        });
-        console.log(`✅ Added ${uid} to badge from device data`);
-      }
-    }
-  });
-  
-  // ✅ SOURCE 2: Fetch from checkOnline collection
+// ✅ Fetch all active devices on page load/refresh
+async function fetchAllActiveDevices() {
   try {
-    const response = await fetch(`${BROS_REPLY_API}/all`, {
-      headers: { 'Authorization': `Bearer ${authToken}` }
+    console.log("📡 Fetching all active devices from:", BROS_REPLY_ALL_API);
+    
+    const response = await fetch(BROS_REPLY_ALL_API, {
+      headers: { 
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
     });
     
     if (response.ok) {
       const data = await response.json();
+      console.log("📡 Active devices response:", data);
+      
       if (data.success && data.data) {
         processCheckOnlineDataForBadge(data.data);
+        console.log(`✅ Active devices loaded: ${data.count || 0}`);
+      } else {
+        console.warn("No active devices found");
       }
+    } else {
+      console.warn("Could not fetch active devices:", response.status);
     }
   } catch (error) {
-    console.warn("Could not fetch all checkOnline data for badge:", error);
+    console.warn("Error fetching active devices:", error);
   }
-  
-  console.log(`📊 Active badge initialized: ${activeDevicesForBadge.size} devices`);
-  updateActiveBadge();
 }
 
-// ✅ Process checkOnline data for badge ONLY
+// ✅ Process checkOnline data for badge
 function processCheckOnlineDataForBadge(checkOnlineData) {
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
   
-  if (!checkOnlineData || typeof checkOnlineData !== 'object') return;
+  if (!checkOnlineData || typeof checkOnlineData !== 'object') {
+    console.log("No checkOnline data to process");
+    return;
+  }
+  
+  activeDevicesForBadge.clear();
   
   Object.entries(checkOnlineData).forEach(([uid, data]) => {
-    if (!uid || !data) return;
+    if (!uid || !data || typeof data !== 'object') return;
     
     const available = data.available || "";
     const checkedAt = data.checkedAt || data.timestamp || 0;
@@ -2186,14 +2157,26 @@ function processCheckOnlineDataForBadge(checkOnlineData) {
         addedAt: now,
         source: 'checkOnline_rtdb'
       });
-      console.log(`✅ Added ${uid} to badge from checkOnline RTDB`);
     }
   });
   
   updateActiveBadge();
 }
 
-/* ===== SINGLE CARD STATUS FUNCTIONS (Manual check only) ===== */
+// ✅ Initialize active badge
+async function initializeActiveBadge() {
+  console.log("📊 Initializing active badge...");
+  
+  // Clear existing data
+  activeDevicesForBadge.clear();
+  
+  // ✅ SOURCE 1: Fetch from brosreply-all API
+  await fetchAllActiveDevices();
+  
+  console.log(`📊 Active badge initialized: ${activeDevicesForBadge.size} devices`);
+}
+
+// ✅ SINGLE CARD STATUS FUNCTIONS
 function updateSingleCardStatus(uid, status) {
   const card = document.querySelector(`.device-card[data-uid="${uid}"]`);
   if (!card) return;
@@ -2280,13 +2263,6 @@ function updateSingleCardStatus(uid, status) {
     
     const onlineIndicator = card.querySelector('.online-indicator');
     if (onlineIndicator) onlineIndicator.remove();
-    
-    // Auto-reset after 5 minutes
-    setTimeout(() => {
-      if (manualCheckStatus.get(uid)?.status === 'pending') {
-        resetSingleCardToPending(uid);
-      }
-    }, 300000);
   }
 }
 
@@ -2308,15 +2284,20 @@ function resetSingleCardToPending(uid) {
   manualCheckStatus.delete(uid);
 }
 
-/* ===== DELETE DEVICE FUNCTIONS ===== */
+// ✅ DELETE DEVICE FUNCTIONS
 function showDeleteConfirm(uid, deviceName) {
   currentDeleteUid = uid;
-  document.getElementById('deleteDeviceName').textContent = deviceName || 'Unknown Device';
-  document.getElementById('deleteConfirmPopup').classList.add('active');
+  const deleteDeviceName = document.getElementById('deleteDeviceName');
+  if (deleteDeviceName) {
+    deleteDeviceName.textContent = deviceName || 'Unknown Device';
+  }
+  const popup = document.getElementById('deleteConfirmPopup');
+  if (popup) popup.classList.add('active');
 }
 
 function hideDeleteConfirm() {
-  document.getElementById('deleteConfirmPopup').classList.remove('active');
+  const popup = document.getElementById('deleteConfirmPopup');
+  if (popup) popup.classList.remove('active');
   currentDeleteUid = null;
 }
 
@@ -2364,27 +2345,33 @@ async function deleteDevice(uid) {
       manualCheckStatus.delete(uid);
       updateActiveBadge();
       
-      document.getElementById("totalDevices").textContent = allDevices.length;
+      // Update total devices count
+      const totalDevicesEl = document.getElementById('totalDevices');
+      if (totalDevicesEl) {
+        totalDevicesEl.textContent = allDevices.length;
+      }
       updateLoadingCounter(allDevices.length);
       
-      const currentSearch = document.getElementById("search").value.toLowerCase();
+      // Re-render list
+      const currentSearch = document.getElementById("search")?.value.toLowerCase() || '';
       renderList(currentSearch);
       
       hideDeleteConfirm();
       
+      // Notify socket
       if (socket) {
         socket.emit('deviceDeleted', { uid: uid });
       }
     }
     
   } catch (error) {
-    console.error(' Delete device error:', error);
+    console.error('Delete device error:', error);
   } finally {
     hideLoadingAnimation();
   }
 }
 
-/* ===== LIKE/UNLIKE FUNCTIONS ===== */
+// ✅ LIKE/UNLIKE FUNCTIONS
 async function toggleLike(uid, event) {
   if (event) event.stopPropagation();
   
@@ -2440,7 +2427,7 @@ async function toggleLike(uid, event) {
     }
     
   } catch (error) {
-    console.error(' Like/unlike error:', error);
+    console.error('Like/unlike error:', error);
     device.likedByUser = isLiked;
     updateLikeUI(uid, isLiked);
   }
@@ -2463,32 +2450,49 @@ function updateLikeUI(uid, isLiked) {
   }
 }
 
+// ✅ INIT POPUP EVENTS
 function initPopupEvents() {
-  document.getElementById('refreshPopupBtn').onclick = () => {
-    if (currentReplyUid) {
-      hideCheckPopup();
-      checkOnline(currentReplyUid);
-    }
-  };
+  const refreshPopupBtn = document.getElementById('refreshPopupBtn');
+  const closePopupBtn = document.getElementById('closePopupBtn');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  const deleteConfirmPopup = document.getElementById('deleteConfirmPopup');
   
-  document.getElementById('closePopupBtn').onclick = hideCheckPopup;
+  if (refreshPopupBtn) {
+    refreshPopupBtn.onclick = () => {
+      if (currentReplyUid) {
+        hideCheckPopup();
+        checkOnline(currentReplyUid);
+      }
+    };
+  }
   
-  document.getElementById('confirmDeleteBtn').onclick = () => {
-    if (currentDeleteUid) {
-      deleteDevice(currentDeleteUid);
-    }
-  };
+  if (closePopupBtn) {
+    closePopupBtn.onclick = hideCheckPopup;
+  }
   
-  document.getElementById('cancelDeleteBtn').onclick = hideDeleteConfirm;
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.onclick = () => {
+      if (currentDeleteUid) {
+        deleteDevice(currentDeleteUid);
+      }
+    };
+  }
   
-  document.getElementById('deleteConfirmPopup').addEventListener('click', function(e) {
-    if (e.target === this) {
-      hideDeleteConfirm();
-    }
-  });
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.onclick = hideDeleteConfirm;
+  }
+  
+  if (deleteConfirmPopup) {
+    deleteConfirmPopup.addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideDeleteConfirm();
+      }
+    });
+  }
 }
 
-/* ===== GET SIM NUMBER ===== */
+// ✅ GET SIM NUMBER
 function getDisplaySimInfo(device) {
   let simNumber = "";
   let simCarrier = "";
@@ -2507,11 +2511,13 @@ function getDisplaySimInfo(device) {
   return { simNumber, simCarrier };
 }
 
-/* ===== FORMAT TIME WITH DATE AND TIME ===== */
+// ✅ FORMAT TIME FUNCTIONS
 function formatTime(timestamp) {
-  if (!timestamp || timestamp === "0") return "Never";
+  if (!timestamp || timestamp === "0" || timestamp === 0) return "Never";
   
   const date = new Date(Number(timestamp));
+  if (isNaN(date.getTime())) return "Never";
+  
   const now = new Date();
   const diffMs = now - date;
   const diffSecs = Math.floor(diffMs / 1000);
@@ -2520,25 +2526,23 @@ function formatTime(timestamp) {
   const diffDays = Math.floor(diffMs / 86400000);
   
   if (diffSecs < 60) return `${diffSecs} sec ago`;
-  if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins} min ago`;
   if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 30) return `${diffDays} days ago`;
   
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
-  }) + ' ' + date.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit'
   });
 }
 
-/* ===== FORMAT DATE ONLY ===== */
 function formatDateOnly(timestamp) {
-  if (!timestamp || timestamp === "0") return "Unknown";
+  if (!timestamp || timestamp === "0" || timestamp === 0) return "Unknown";
   
   const date = new Date(Number(timestamp));
+  if (isNaN(date.getTime())) return "Unknown";
+  
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -2546,12 +2550,15 @@ function formatDateOnly(timestamp) {
   });
 }
 
-/* ===== SOCKET LISTENERS (Active badge ONLY, NO card updates) ===== */
+// ✅ SOCKET LISTENERS
 function initSocketListeners() {
   try {
     const socketOptions = {
       transports: ["websocket", "polling"],
-      withCredentials: true
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     };
     
     if (authToken) {
@@ -2559,19 +2566,20 @@ function initSocketListeners() {
       socketOptions.query = { token: authToken, sessionId: sessionId };
     }
     
+    console.log("🔌 Connecting to socket...");
     socket = io(BASE_URL || undefined, socketOptions);
 
     // ✅ SOURCE 1: checkOnline_all (For ACTIVE BADGE ONLY)
     socket.on("checkOnline_all", (data) => {
-      console.log("📡 checkOnline_all received for ACTIVE BADGE:", data);
+      console.log("📡 checkOnline_all received:", Object.keys(data || {}).length, "devices");
       if (data && typeof data === 'object') {
         processCheckOnlineDataForBadge(data);
       }
     });
     
-    // ✅ SOURCE 2: brosReplyUpdate (For ACTIVE BADGE ONLY when it's a new online reply)
+    // ✅ SOURCE 2: brosReplyUpdate (For ACTIVE BADGE ONLY)
     socket.on("brosReplyUpdate", (payload) => {
-      console.log("📡 brosReplyUpdate received for ACTIVE BADGE:", payload);
+      console.log("📡 brosReplyUpdate received:", payload);
       
       if (payload && payload.uid && payload.data) {
         const replyData = payload.data;
@@ -2588,9 +2596,13 @@ function initSocketListeners() {
           
           if (isOnlineReply) {
             stopCountdown();
-            document.getElementById('popupStatus').textContent = 'Device Online ✓';
-            document.getElementById('popupMessage').textContent = 'Device confirmed online';
-            document.getElementById('refreshPopupBtn').style.display = 'flex';
+            const popupStatus = document.getElementById('popupStatus');
+            const popupMessage = document.getElementById('popupMessage');
+            const refreshBtn = document.getElementById('refreshPopupBtn');
+            
+            if (popupStatus) popupStatus.textContent = 'Device Online ✓';
+            if (popupMessage) popupMessage.textContent = 'Device confirmed online';
+            if (refreshBtn) refreshBtn.style.display = 'flex';
             
             // Update the single card that's being checked
             updateSingleCardStatus(uid, 'online');
@@ -2603,9 +2615,9 @@ function initSocketListeners() {
       }
     });
     
-    // Other socket listeners for data updates (NO card updates)
+    // Other socket listeners
     socket.on("devicesLive", (payload) => {
-      console.log("📡 devicesLive received:");
+      console.log("📡 devicesLive received:", payload?.data?.length || 0, "devices");
       
       if (payload && Array.isArray(payload.data)) {
         allDevices = (payload.data || []).sort((a, b) => {
@@ -2616,15 +2628,18 @@ function initSocketListeners() {
         
         allDevices = assignSerialNumbers(allDevices);
         
-        // ✅ Update active badge from new data
-        initializeActiveBadge(allDevices);
-        
-        document.getElementById("totalDevices").textContent = allDevices.length;
+        // Update total devices count
+        const totalDevicesEl = document.getElementById('totalDevices');
+        if (totalDevicesEl) {
+          totalDevicesEl.textContent = allDevices.length;
+        }
         updateLoadingCounter(allDevices.length);
         
-        const currentSearch = document.getElementById("search").value.toLowerCase();
+        // Re-render list
+        const currentSearch = document.getElementById("search")?.value.toLowerCase() || '';
         renderList(currentSearch);
         
+        // Restore scroll position
         setTimeout(() => {
           window.scrollTo(0, scrollPosition);
         }, 10);
@@ -2680,15 +2695,23 @@ function initSocketListeners() {
         manualCheckStatus.delete(data.uid);
         updateActiveBadge();
         
-        document.getElementById("totalDevices").textContent = allDevices.length;
+        // Update total devices count
+        const totalDevicesEl = document.getElementById('totalDevices');
+        if (totalDevicesEl) {
+          totalDevicesEl.textContent = allDevices.length;
+        }
         updateLoadingCounter(allDevices.length);
-        renderList(document.getElementById("search").value.toLowerCase());
+        
+        // Re-render list
+        const currentSearch = document.getElementById("search")?.value.toLowerCase() || '';
+        renderList(currentSearch);
       }
     });
     
     socket.on("connect_error", (err) => {
       console.warn("⚠️ Socket connection error:", err.message);
       if (err.message.includes("auth") || err.message.includes("token")) {
+        console.log("🔑 Authentication failed, redirecting to login...");
         redirectToLogin();
       }
     });
@@ -2721,7 +2744,7 @@ function clearCheckingTimer(uid) {
   }
 }
 
-/* ===== CHECK ONLINE FOR SINGLE DEVICE (Manual check) ===== */
+// ✅ CHECK ONLINE FOR SINGLE DEVICE (Manual check)
 async function checkOnline(uid, event) {
   if (event) event.stopPropagation();
   
@@ -2763,10 +2786,10 @@ async function checkOnline(uid, event) {
       return response.json();
     })
     .then(result => {
-      console.log(" Check online API response:", result);
+      console.log("Check online API response:", result);
     })
     .catch(e => {
-      console.warn(" Check Online API failed:", e);
+      console.warn("Check Online API failed:", e);
     });
     
     // Second API call - brosreply to get immediate status
@@ -2781,7 +2804,7 @@ async function checkOnline(uid, event) {
       return response.json();
     })
     .then(result => {
-      console.log(" Bros Reply API response:", result);
+      console.log("Bros Reply API response:", result);
       
       // If we get immediate data, process it
       if (result.success && result.data) {
@@ -2795,15 +2818,19 @@ async function checkOnline(uid, event) {
           
           if (currentReplyUid === uid) {
             stopCountdown();
-            document.getElementById('popupStatus').textContent = 'Device Online ✓';
-            document.getElementById('popupMessage').textContent = 'Device confirmed online';
-            document.getElementById('refreshPopupBtn').style.display = 'flex';
+            const popupStatus = document.getElementById('popupStatus');
+            const popupMessage = document.getElementById('popupMessage');
+            const refreshBtn = document.getElementById('refreshPopupBtn');
+            
+            if (popupStatus) popupStatus.textContent = 'Device Online ✓';
+            if (popupMessage) popupMessage.textContent = 'Device confirmed online';
+            if (refreshBtn) refreshBtn.style.display = 'flex';
           }
         }
       }
     })
     .catch(e => {
-      console.warn(" Bros Reply API failed:", e);
+      console.warn("Bros Reply API failed:", e);
     });
     
     // Wait 30 seconds before marking as pending
@@ -2813,9 +2840,13 @@ async function checkOnline(uid, event) {
         clearCheckingTimer(uid);
         
         if (currentReplyUid === uid) {
-          document.getElementById('popupStatus').textContent = 'No Immediate Reply';
-          document.getElementById('popupMessage').textContent = 'Device status pending confirmation';
-          document.getElementById('refreshPopupBtn').style.display = 'flex';
+          const popupStatus = document.getElementById('popupStatus');
+          const popupMessage = document.getElementById('popupMessage');
+          const refreshBtn = document.getElementById('refreshPopupBtn');
+          
+          if (popupStatus) popupStatus.textContent = 'No Immediate Reply';
+          if (popupMessage) popupMessage.textContent = 'Device status pending confirmation';
+          if (refreshBtn) refreshBtn.style.display = 'flex';
           stopCountdown();
         }
       }
@@ -2828,7 +2859,19 @@ async function checkOnline(uid, event) {
   }
 }
 
-/* ===== RENDER DEVICE CARD ===== */
+// ✅ ASSIGN SERIAL NUMBERS
+function assignSerialNumbers(devices) {
+  const totalDevices = devices.length;
+  
+  return devices.map((device, index) => {
+    device.serialNumber = totalDevices - 1 - index;
+    device.isLatest = index === 0;
+    device.isOldest = index === devices.length - 1;
+    return device;
+  });
+}
+
+// ✅ RENDER DEVICE CARD
 function renderDevice(d, index) {
   const uid = d.id || d.uniqueid || d.uid || d.deviceId || d.uniqueId || d.deviceID;
   const brand = d.brand || "Unknown";
@@ -2880,9 +2923,6 @@ function renderDevice(d, index) {
   } else {
     buttonText = '<i class="fas fa-wifi"></i> CHECK ONLINE';
   }
-  
-  // Check if device is in active badge (for display only, not for functionality)
-  const isInActiveBadge = activeDevicesForBadge.has(uid);
   
   const card = document.createElement("div");
   card.className = "device-card";
@@ -2947,7 +2987,7 @@ function renderDevice(d, index) {
     </div>
     
     <div class="card-footer">
-      <div class="device-id" title="${uid}">${uid.substring(0, 10)}...</div>
+      <div class="device-id" title="${uid}">${uid ? uid.substring(0, 10) + '...' : 'N/A'}</div>
       <button class="check-online-btn ${buttonStatus}" 
               onclick="checkOnline('${uid}', event)"
               ${isDisabled ? 'disabled' : ''}>
@@ -2961,7 +3001,10 @@ function renderDevice(d, index) {
         !e.target.closest('.check-online-btn')) {
       scrollPosition = window.scrollY;
       localStorage.setItem('deviceListScrollPosition', scrollPosition);
-      localStorage.setItem('deviceListSearchQuery', document.getElementById("search").value);
+      const searchInput = document.getElementById("search");
+      if (searchInput) {
+        localStorage.setItem('deviceListSearchQuery', searchInput.value);
+      }
       location.href = `device-details.html?id=${uid}`;
     }
   };
@@ -2970,7 +3013,7 @@ function renderDevice(d, index) {
   return card;
 }
 
-/* ===== FETCH DEVICES AND INITIALIZE ===== */
+// ✅ FETCH DEVICES
 async function fetchDevices() {
   try {
     showLoadingAnimation();
@@ -2996,7 +3039,7 @@ async function fetchDevices() {
     }
     
     const data = await res.json();
-    console.log("📡 Devices data received:", data);
+    console.log("📡 Devices data received:", data?.data?.length || 0, "devices");
     
     allDevices = (data.data || []).sort((a, b) => {
       const timeA = Number(b.joinedAt || b.installTime || 0);
@@ -3039,11 +3082,15 @@ async function fetchDevices() {
     
     allDevices = assignSerialNumbers(allDevices);
     
-    document.getElementById("totalDevices").textContent = allDevices.length;
+    // Update total devices count
+    const totalDevicesEl = document.getElementById('totalDevices');
+    if (totalDevicesEl) {
+      totalDevicesEl.textContent = allDevices.length;
+    }
     updateLoadingCounter(allDevices.length);
     
-    // ✅ Initialize active badge ONLY (NO card updates)
-    await initializeActiveBadge(allDevices);
+    // ✅ Initialize active badge
+    await initializeActiveBadge();
     
     setTimeout(() => {
       hideLoadingAnimation();
@@ -3051,8 +3098,9 @@ async function fetchDevices() {
       const savedSearch = localStorage.getItem('deviceListSearchQuery') || '';
       const savedScroll = localStorage.getItem('deviceListScrollPosition') || 0;
       
-      if (savedSearch) {
-        document.getElementById("search").value = savedSearch;
+      const searchInput = document.getElementById("search");
+      if (searchInput && savedSearch) {
+        searchInput.value = savedSearch;
       }
       
       renderList(savedSearch);
@@ -3065,16 +3113,29 @@ async function fetchDevices() {
   } catch (err) {
     console.error("❌ fetchDevices error:", err);
     allDevices = [];
-    document.getElementById("totalDevices").textContent = "0";
+    
+    // Update total devices count
+    const totalDevicesEl = document.getElementById('totalDevices');
+    if (totalDevicesEl) {
+      totalDevicesEl.textContent = "0";
+    }
+    
     updateActiveBadge();
     hideLoadingAnimation();
     renderList();
   }
 }
 
+// ✅ RENDER LIST
 function renderList(searchQuery = '') {
-  const q = searchQuery || document.getElementById("search").value.toLowerCase();
+  const q = searchQuery || (document.getElementById("search")?.value.toLowerCase() || '');
   const box = document.getElementById("devicesList");
+  
+  if (!box) {
+    console.error("❌ devicesList element not found!");
+    return;
+  }
+  
   box.innerHTML = "";
   
   deviceCardMap.clear();
@@ -3116,49 +3177,74 @@ function renderList(searchQuery = '') {
   });
 }
 
-/* ===== INITIALIZE EVERYTHING ===== */
+// ✅ INITIALIZE EVERYTHING
 document.addEventListener('DOMContentLoaded', function() {
   console.log("✅ DOM Content Loaded");
   
-  if (!checkAuth()) return;
+  // Check authentication first
+  if (!checkAuth()) {
+    return;
+  }
   
+  // Initialize with loading state
   showLoadingAnimation();
-  updateActiveBadge();
   
+  // Initialize active badge with 0 count
+  const activeCountEl = document.getElementById('activeCount');
+  const totalDevicesEl = document.getElementById('totalDevices');
+  
+  if (activeCountEl) activeCountEl.textContent = "0";
+  if (totalDevicesEl) totalDevicesEl.textContent = "0";
+  
+  // Initialize popup events
   initPopupEvents();
   
+  // Initialize socket listeners
   socket = initSocketListeners();
   
   // Run validity checks every 30 seconds (for active badge only)
   setInterval(checkActiveBadgeValidity, 30000);
   
+  // Setup search functionality
+  const searchInput = document.getElementById("search");
   let searchTimer;
-  document.getElementById("search").addEventListener("input", function() {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      localStorage.setItem('deviceListSearchQuery', this.value);
-      renderList();
-    }, 300);
-  });
   
-  document.getElementById("search").addEventListener("keydown", function(e) {
-    if (e.key === 'Escape') {
-      this.value = '';
-      localStorage.setItem('deviceListSearchQuery', '');
-      renderList();
-    }
-  });
+  if (searchInput) {
+    searchInput.addEventListener("input", function() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        localStorage.setItem('deviceListSearchQuery', this.value);
+        renderList();
+      }, 300);
+    });
+    
+    searchInput.addEventListener("keydown", function(e) {
+      if (e.key === 'Escape') {
+        this.value = '';
+        localStorage.setItem('deviceListSearchQuery', '');
+        renderList();
+      }
+    });
+  }
 
+  // Check if this is a back/forward navigation
   if (!window.performance.navigation || window.performance.navigation.type !== 2) {
     localStorage.removeItem('deviceListScrollPosition');
     localStorage.removeItem('deviceListSearchQuery');
   }
   
-  setTimeout(fetchDevices, 500);
+  // Start fetching data
+  setTimeout(() => {
+    fetchDevices();
+  }, 500);
   
   // Refresh devices every 30 seconds
   setInterval(fetchDevices, 30000);
   
+  // Refresh active devices every minute
+  setInterval(fetchAllActiveDevices, 60000);
+  
+  // Handle page visibility changes
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
       const savedScroll = localStorage.getItem('deviceListScrollPosition');
@@ -3168,12 +3254,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // Save scroll position and search query before page unload
   window.addEventListener('beforeunload', function() {
     localStorage.setItem('deviceListScrollPosition', window.scrollY);
-    localStorage.setItem('deviceListSearchQuery', document.getElementById("search").value);
+    const searchInput = document.getElementById("search");
+    if (searchInput) {
+      localStorage.setItem('deviceListSearchQuery', searchInput.value);
+    }
   });
 });
 
+// ✅ EXPORT FUNCTIONS TO WINDOW
 window.toggleLike = toggleLike;
 window.showDeleteConfirm = showDeleteConfirm;
 window.checkOnline = checkOnline;
