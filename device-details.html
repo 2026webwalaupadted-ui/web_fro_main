@@ -3186,7 +3186,6 @@ function initEventListeners() {
   document.getElementById('closePopupBtn').onclick = hideCheckPopup;
 }
 
-// ===================== DEVICE DATA PANEL TOGGLE =====================
 function toggleDeviceDataPanel() {
   const panel = document.getElementById('deviceDataPanel');
   const header = document.getElementById('deviceDataHeader');
@@ -3199,7 +3198,6 @@ function toggleDeviceDataPanel() {
     // Scroll to panel
     panel.scrollIntoView({ behavior: 'smooth' });
     
-    // Refresh data if panel is opened
     if (header.classList.contains('expanded') && !deviceAllData) {
       loadDeviceAllData();
     }
