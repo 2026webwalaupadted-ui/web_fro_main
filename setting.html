@@ -227,6 +227,7 @@
       background: var(--bg-secondary);
       min-width: 140px;
       justify-content: center;
+      cursor: pointer;
     }
 
     .nav a:hover {
@@ -1062,19 +1063,19 @@
 <nav class="nav">
   <div class="nav-container">
     <div class="nav-links">
-      <a href="#" onclick="navigateTo('messages.html')">
+      <a class="nav-link" data-page="messages">
         <i class="fas fa-comment-alt"></i>
         Messages
       </a>
-      <a href="#" onclick="navigateTo('groups.html')">
+      <a class="nav-link" data-page="groups">
         <i class="fas fa-layer-group"></i>
         Groups
       </a>
-      <a href="devices.html" class="active">
+      <a class="nav-link active" data-page="devices">
         <i class="fas fa-mobile-alt"></i>
         Devices
       </a>
-      <a href="#" onclick="navigateTo('setting.html')">
+      <a class="nav-link" data-page="settings">
         <i class="fas fa-cog"></i>
         Settings
       </a>
@@ -1353,6 +1354,63 @@ const API_BASE = import.meta.env.VITE_API_BASE;
       } catch (error) {
         console.error('Fetch error:', error);
         throw error;
+      }
+    }
+
+    // ===================== NAVIGATION FUNCTIONS =====================
+    function setupNavigation() {
+      const navLinks = document.querySelectorAll('.nav-link');
+      const currentPage = window.location.pathname.includes('devices') ? 'devices' : 
+                         window.location.pathname.includes('messages') ? 'messages' :
+                         window.location.pathname.includes('groups') ? 'groups' :
+                         window.location.pathname.includes('setting') ? 'settings' : 'devices';
+      
+      // Set active class based on current page
+      navLinks.forEach(link => {
+        const page = link.getAttribute('data-page');
+        if (page === currentPage) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+      
+      // Add click event listeners
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const page = this.getAttribute('data-page');
+          
+          // Remove active class from all links
+          navLinks.forEach(l => l.classList.remove('active'));
+          
+          // Add active class to clicked link
+          this.classList.add('active');
+          
+          // Navigate to the page
+          navigateToPage(page);
+        });
+      });
+    }
+
+    function navigateToPage(page) {
+      switch(page) {
+        case 'messages':
+          window.location.href = 'messages.html';
+          break;
+        case 'groups':
+          window.location.href = 'groups.html';
+          break;
+        case 'devices':
+          window.location.href = 'devices.html';
+          break;
+        case 'settings':
+          window.location.href = 'setting.html';
+          break;
+        default:
+          window.location.href = 'devices.html';
       }
     }
 
@@ -1796,6 +1854,9 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 
     // ===================== SETUP EVENT LISTENERS =====================
     function setupEventListeners() {
+      // Setup navigation first
+      setupNavigation();
+      
       // Status select change
       document.getElementById('statusSelect').addEventListener('change', handleStatusChange);
       
@@ -1845,27 +1906,22 @@ const API_BASE = import.meta.env.VITE_API_BASE;
       });
     }
 
-    // ===================== INITIALIZATION =====================
     window.onload = async () => {
       if (!checkAuth()) {
         return;
       }
       
-      // Setup all event listeners first
       setupEventListeners();
       
       initSocket();
       
-      // Load all data
       await Promise.all([
         loadSettings(),
         loadActiveSessions()
       ]);
       
-      // Refresh sessions every 30 seconds
       setInterval(() => loadActiveSessions(), 30000);
       
-      // Show welcome message
       setTimeout(() => {
         if (activeSessions.length > 1) {
           showSessionsMessage(`You have ${activeSessions.length} active sessions.`, "info");

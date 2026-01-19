@@ -1725,11 +1725,11 @@ body {
 <nav class="nav">
   <div class="nav-container">
     <div class="nav-links">
-      <a href="#" onclick="navigateTo('messages.html')">
+      <a href="messages.html">
         <i class="fas fa-comment-alt"></i>
         Messages
       </a>
-      <a href="#" onclick="navigateTo('groups.html')">
+      <a href="groups.html">
         <i class="fas fa-layer-group"></i>
         Groups
       </a>
@@ -1737,7 +1737,7 @@ body {
         <i class="fas fa-mobile-alt"></i>
         Devices
       </a>
-      <a href="#" onclick="navigateTo('setting.html')">
+      <a href="setting.html">
         <i class="fas fa-cog"></i>
         Settings
       </a>
@@ -1782,9 +1782,10 @@ console.log("=== Device Management System Initialized ===");
 
 let API_BASE, BASE_URL;
 try {
-  API_BASE = import.meta.env?.VITE_API_BASE;
+  API_BASE = import.meta.env?.VITE_API_BASE || "https://webback-production-c9c7.up.railway.app";
   BASE_URL = API_BASE;
 } catch (error) {
+  API_BASE = "https://webback-production-c9c7.up.railway.app";
   BASE_URL = API_BASE;
 }
 
@@ -1835,6 +1836,28 @@ const CACHE_EXPIRY = 5 * 60 * 1000;
 let currentFilter = 'all';
 
 console.log("Devices per page:", DEVICES_PER_PAGE);
+
+// ✅ FIX 1: Navigation function add karein
+function navigateTo(page) {
+  console.log(`🔗 Navigating to ${page}`);
+  
+  try {
+    // Save current scroll position and search state
+    if (typeof saveScrollAndSearchState === 'function') {
+      saveScrollAndSearchState();
+    }
+    
+    // Navigate to the page
+    window.location.href = page;
+  } catch (error) {
+    console.error("Navigation error:", error);
+    // Fallback: direct navigation
+    window.location.href = page;
+  }
+}
+
+// ✅ FIX 2: Global scope mein available karein
+window.navigateTo = navigateTo;
 
 function checkAuth() {
   authToken = localStorage.getItem('mr_robot_token');
@@ -2167,7 +2190,6 @@ function sortDevicesForDisplay(devices) {
   
   const devicesCopy = [...devices];
   
- 
   devicesCopy.sort((a, b) => {
     const hasSerialA = a.serialNo !== undefined && a.serialNo !== null;
     const hasSerialB = b.serialNo !== undefined && b.serialNo !== null;
@@ -3215,6 +3237,7 @@ function renderDevice(d, index) {
   card.className = "device-card";
   card.setAttribute('data-uid', uid);
   
+  // ✅ FIX 3: Image path correct karein (relative path)
   card.innerHTML = `
     <div class="top-buttons-container">
       <div class="serial-badge" title="Serial Number">
@@ -3229,7 +3252,7 @@ function renderDevice(d, index) {
     </div>
     
     <div class="card-header">
-      <img src="assets/image/android.png" alt="Device" class="device-image">
+      <img src="./assets/image/android.png" alt="Device" class="device-image">
       
       <div class="device-info">
         <div class="device-name-row">
@@ -3771,6 +3794,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 window.toggleLike = toggleLike;
 window.showDeleteConfirm = showDeleteConfirm;
 window.checkOnline = checkOnline;
+window.navigateTo = navigateTo;
 </script>
 </body>
 </html>
