@@ -1782,10 +1782,9 @@ console.log("=== Device Management System Initialized ===");
 
 let API_BASE, BASE_URL;
 try {
-  API_BASE = import.meta.env?.VITE_API_BASE || "https://webback-production-c9c7.up.railway.app";
+  API_BASE = import.meta.env?.VITE_API_BASE;
   BASE_URL = API_BASE;
 } catch (error) {
-  API_BASE = "https://webback-production-c9c7.up.railway.app";
   BASE_URL = API_BASE;
 }
 
@@ -1904,7 +1903,6 @@ function hideCheckPopup() {
   currentReplyUid = null;
 }
 
-// ✅ FIXED: Save serial to backend (registeredDevices)
 async function saveSerialToBackend(deviceId, serialNo) {
   try {
     console.log(`💾 Saving serial ${serialNo} for device ${deviceId} to registeredDevices`);
@@ -1936,7 +1934,6 @@ async function saveSerialToBackend(deviceId, serialNo) {
   }
 }
 
-// ✅ Load serials from cache
 function loadSerialCacheFromLocalStorage() {
   try {
     const cachedData = localStorage.getItem(SERIAL_CACHE_KEY);
@@ -1950,7 +1947,6 @@ function loadSerialCacheFromLocalStorage() {
         const cache = JSON.parse(cachedData);
         permanentSerialsCache = new Map(Object.entries(cache));
         
-        // Calculate highest serial
         const serials = Array.from(permanentSerialsCache.values())
           .map(s => s.serialNo)
           .filter(s => s !== undefined && s !== null);
@@ -1971,7 +1967,6 @@ function loadSerialCacheFromLocalStorage() {
   return false;
 }
 
-// ✅ Save serials to cache
 function saveSerialCacheToLocalStorage() {
   try {
     const cacheObject = Object.fromEntries(permanentSerialsCache);
@@ -1983,7 +1978,6 @@ function saveSerialCacheToLocalStorage() {
   }
 }
 
-// ✅ Get next available serial (starting from 0 for oldest)
 function getNextAvailableSerial() {
   const assignedSerials = Array.from(permanentSerialsCache.values())
     .map(s => s.serialNo)
@@ -2173,10 +2167,7 @@ function sortDevicesForDisplay(devices) {
   
   const devicesCopy = [...devices];
   
-  // Sort by:
-  // 1. Has serial? (devices with serial come first)
-  // 2. Serial number DESC (highest first)
-  // 3. Timestamp DESC (newest first for devices without serial)
+ 
   devicesCopy.sort((a, b) => {
     const hasSerialA = a.serialNo !== undefined && a.serialNo !== null;
     const hasSerialB = b.serialNo !== undefined && b.serialNo !== null;
@@ -3238,7 +3229,7 @@ function renderDevice(d, index) {
     </div>
     
     <div class="card-header">
-      <img src="/assets/image/android.png" alt="Device" class="device-image">
+      <img src="assets/image/android.png" alt="Device" class="device-image">
       
       <div class="device-info">
         <div class="device-name-row">
