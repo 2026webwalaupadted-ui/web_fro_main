@@ -2247,19 +2247,75 @@ function updateActiveBadge() {
   return activeCount;
 }
 
+// ✅ FIXED: isDeviceOnlineMessage function - Improved to detect more online patterns
 function isDeviceOnlineMessage(message) {
   if (!message) return false;
+  
+  // Handle different types of message inputs
   const msgStr = String(message).toLowerCase().trim();
-  return msgStr.includes("device is online") || 
-         msgStr.includes("available: device is online") ||
-         msgStr === "true" ||
-         msgStr === "device online" ||
-         msgStr === "online" ||
-         msgStr.includes("active: true");
+  
+  // Check for online status patterns
+  const onlinePatterns = [
+    "device is online",
+    "available: device is online",
+    "true",
+    "device online",
+    "online",
+    "active: true",
+    "active",
+    "available: true",
+    "status: online",
+    "status:true",
+    "is online",
+    "device available",
+    "available",
+    "1"
+  ];
+  
+  // Check if any pattern matches
+  for (const pattern of onlinePatterns) {
+    if (msgStr.includes(pattern) || msgStr === pattern) {
+      console.log(`✅ Device is online - Matched pattern: "${pattern}" in message: "${msgStr}"`);
+      return true;
+    }
+  }
+  
+  // Additional check for JSON strings
+  if (msgStr.includes('{') && msgStr.includes('}')) {
+    try {
+      const parsed = JSON.parse(msgStr);
+      if (typeof parsed === 'object') {
+        // Check common online indicators in JSON
+        if (parsed.available === true || 
+            parsed.online === true || 
+            parsed.status === 'online' ||
+            parsed.active === true) {
+          console.log(`✅ Device is online - JSON parsed:`, parsed);
+          return true;
+        }
+        
+        // Check string values in JSON
+        const availableStr = String(parsed.available || '').toLowerCase();
+        if (availableStr.includes('device is online') || 
+            availableStr === 'true' || 
+            availableStr === 'online') {
+          console.log(`✅ Device is online - JSON string:`, availableStr);
+          return true;
+        }
+      }
+    } catch (e) {
+      // Not valid JSON, continue
+    }
+  }
+  
+  console.log(`❌ Device is NOT online - Message: "${msgStr}"`);
+  return false;
 }
 
 function addToSocketActiveBadge(uid, timestamp, checkedAt, available) {
-  if (!isDeviceOnlineMessage(available)) return false;
+  const isOnline = isDeviceOnlineMessage(available);
+  
+  if (!isOnline) return false;
   
   const now = Date.now();
   const fifteenMinutesAgo = now - (15 * 60 * 1000);
@@ -2320,6 +2376,8 @@ function updateSingleCardStatus(uid, status) {
         onlineIndicator = document.createElement('span');
         onlineIndicator.className = 'online-indicator visible';
         deviceMeta.appendChild(onlineIndicator);
+      } else {
+        onlineIndicator.classList.add('visible');
       }
     }
     
@@ -2368,7 +2426,7 @@ function resetSingleCardToPending(uid) {
   
   const button = card.querySelector('.check-online-btn');
   if (button) {
-    button.classList.remove('online', 'offline', 'pending');
+    button.classList.remove('online', 'offline', 'pending', 'checking');
     button.innerHTML = '<i class="fas fa-wifi"></i> CHECK ONLINE';
   }
   
@@ -2688,18 +2746,29 @@ function initSocketListeners() {
       }
     });
     
+    // ✅ FIXED: brosReplyUpdate event handler - Properly listen for online status
     socket.on("brosReplyUpdate", (payload) => {
       console.log("Socket: brosReplyUpdate received", payload);
+      
       if (payload && payload.uid && payload.data) {
         const replyData = payload.data;
         const uid = payload.uid;
         const available = replyData.available || "";
         const checkedAt = replyData.checkedAt || replyData.timestamp || Date.now();
         
-        addToSocketActiveBadge(uid, Date.now(), checkedAt, available);
+        console.log(`📡 Socket reply for ${uid}:`, { available, checkedAt });
         
+        // Check if device is online
+        const isOnlineReply = isDeviceOnlineMessage(available);
+        
+        // Add to active devices if online
+        if (isOnlineReply) {
+          addToSocketActiveBadge(uid, Date.now(), checkedAt, available);
+        }
+        
+        // Update card status if currently checking
         if (currentReplyUid === uid) {
-          const isOnlineReply = isDeviceOnlineMessage(available);
+          console.log(`🎯 Popup update for ${uid}, isOnline: ${isOnlineReply}`);
           
           if (isOnlineReply) {
             stopCountdown();
@@ -2713,10 +2782,27 @@ function initSocketListeners() {
             
             updateSingleCardStatus(uid, 'online');
             clearCheckingTimer(uid);
+            
+            console.log(`✅ Device ${uid} marked as ONLINE via socket`);
           } else {
+            // Device replied but not online
+            const popupStatus = document.getElementById('popupStatus');
+            const popupMessage = document.getElementById('popupMessage');
+            
+            if (popupStatus) popupStatus.textContent = 'Device Replied';
+            if (popupMessage) popupMessage.textContent = 'Device responded but status not online';
+            
             updateSingleCardStatus(uid, 'pending');
             clearCheckingTimer(uid);
+            
+            console.log(`⚠️ Device ${uid} replied but not online`);
           }
+        }
+        
+        // Always update card status for this device
+        if (checkingDevices.has(uid)) {
+          updateSingleCardStatus(uid, isOnlineReply ? 'online' : 'pending');
+          clearCheckingTimer(uid);
         }
       }
     });
@@ -3033,6 +3119,61 @@ async function checkOnline(uid, event) {
     
   } catch (e) {
     console.error("Error in checkOnline:", e);
+  }
+}
+
+function startCountdown() {
+  countdownSeconds = 30;
+  const countdownTimer = document.getElementById('countdownTimer');
+  const progressFill = document.getElementById('progressFill');
+  
+  if (countdownTimer) {
+    countdownTimer.style.display = 'block';
+    countdownTimer.textContent = `${countdownSeconds}s`;
+    countdownTimer.classList.remove('warning', 'critical');
+  }
+  
+  if (progressFill) {
+    progressFill.style.width = '100%';
+  }
+  
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+  
+  countdownInterval = setInterval(() => {
+    countdownSeconds--;
+    
+    if (countdownTimer) {
+      countdownTimer.textContent = `${countdownSeconds}s`;
+      
+      if (countdownSeconds <= 10) {
+        countdownTimer.classList.add('critical');
+      } else if (countdownSeconds <= 20) {
+        countdownTimer.classList.add('warning');
+      }
+    }
+    
+    if (progressFill) {
+      const widthPercent = (countdownSeconds / 30) * 100;
+      progressFill.style.width = `${widthPercent}%`;
+    }
+    
+    if (countdownSeconds <= 0) {
+      stopCountdown();
+      if (currentReplyUid) {
+        updateSingleCardStatus(currentReplyUid, 'pending');
+        const refreshBtn = document.getElementById('refreshPopupBtn');
+        if (refreshBtn) refreshBtn.style.display = 'flex';
+      }
+    }
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
   }
 }
 
@@ -3637,7 +3778,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   }, 60000);
 });
 
-// Global functions
 window.toggleLike = toggleLike;
 window.showDeleteConfirm = showDeleteConfirm;
 window.checkOnline = checkOnline;
