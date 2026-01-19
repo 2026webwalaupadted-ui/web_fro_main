@@ -65,6 +65,8 @@ body {
   line-height: 1.4;
   font-size: 18px;
   min-height: 100vh;
+  /* ✅ Ensure page starts at top */
+  scroll-behavior: smooth;
 }
 
 /* ================== AUTH ERROR MESSAGE ================== */
@@ -130,11 +132,13 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 9998;
 }
 
 .fullscreen-loader.hidden {
   opacity: 0;
   visibility: hidden;
+  transition: opacity 0.5s, visibility 0.5s;
 }
 
 .loader {
@@ -514,6 +518,8 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 16px 30px;
+  /* ✅ Ensure content starts from top */
+  min-height: calc(100vh - 200px);
 }
 
 /* ================== COMPACT MESSAGES CONTAINER ================== */
@@ -1698,6 +1704,36 @@ function initSocket() {
   }
 }
 
+/* ===== ✅ CRITICAL FIX: GET CORRECT TIMESTAMP ===== */
+function getMessageTimestamp(msg) {
+  if (msg.timestamp) {
+    // If timestamp is already a number or valid date
+    if (typeof msg.timestamp === 'number') {
+      return msg.timestamp;
+    }
+    // If it's a date string
+    const date = new Date(msg.timestamp);
+    if (!isNaN(date.getTime())) {
+      return date.getTime();
+    }
+  }
+  
+  // Try other possible timestamp fields
+  const possibleFields = ['createdAt', 'time', 'date', 'receivedAt', 'sentAt'];
+  for (const field of possibleFields) {
+    if (msg[field]) {
+      const date = new Date(msg[field]);
+      if (!isNaN(date.getTime())) {
+        return date.getTime();
+      }
+    }
+  }
+  
+  // If no valid timestamp found, use current time
+  console.log(`⚠️ No valid timestamp found for message ${msg._id || msg.id}, using current time`);
+  return Date.now();
+}
+
 // Handle LIVE SMS
 function handleNewSMS(data) {
   console.log('🔔 Handling new SMS from socket:', data);
@@ -1737,23 +1773,36 @@ function handleNewSMS(data) {
     sender: sender,
     receiverNumber: receiver,
     body: messageBody,
-    timestamp: smsData.timestamp || Date.now(),
+    timestamp: getMessageTimestamp(smsData), // ✅ Use proper timestamp function
     isLive: true,
     id: smsId
   };
   
   console.log('📝 New LIVE SMS added:', newMsg);
+  console.log(`🕒 LIVE SMS Timestamp: ${newMsg.timestamp} (${formatDate(newMsg.timestamp)})`);
   
-  // Add to beginning of all messages
+  // ✅ **FIX: Add to beginning of all messages**
   allMessages.unshift(newMsg);
+  
+  // ✅ **FIX: Sort ALL messages by timestamp (newest first)**
+  sortAllMessagesByTimestamp();
   
   // Apply current filters and add to displayed messages
   if (filterMessage(newMsg)) {
     displayedMessages.unshift(newMsg);
     
+    // ✅ **FIX: Sort displayed messages by timestamp**
+    sortDisplayedMessagesByTimestamp();
+    
     // Re-render the page
     renderCurrentPage();
     updatePaginationInfo();
+    
+    // ✅ **FIX: Scroll to top when new LIVE message arrives**
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      console.log('🔼 Scrolled to top for new LIVE message');
+    }, 100);
   }
   
   // Update total count
@@ -1764,6 +1813,25 @@ function handleNewSMS(data) {
   
   // Show notification
   showNewMessageAlert(newMsg);
+}
+
+/* ===== ✅ CRITICAL FIX: SORTING FUNCTIONS ===== */
+function sortAllMessagesByTimestamp() {
+  allMessages.sort((a, b) => {
+    const timeA = getMessageTimestamp(a);
+    const timeB = getMessageTimestamp(b);
+    return timeB - timeA; // Newest first
+  });
+  console.log(`✅ Sorted all messages by timestamp (${allMessages.length} messages)`);
+}
+
+function sortDisplayedMessagesByTimestamp() {
+  displayedMessages.sort((a, b) => {
+    const timeA = getMessageTimestamp(a);
+    const timeB = getMessageTimestamp(b);
+    return timeB - timeA; // Newest first
+  });
+  console.log(`✅ Sorted displayed messages by timestamp (${displayedMessages.length} messages)`);
 }
 
 function showNewMessageAlert(message) {
@@ -1945,10 +2013,19 @@ function applyFilters() {
   
   console.log(`✅ Filtered messages: ${displayedMessages.length} out of ${allMessages.length}`);
   
+  // ✅ **FIX: Sort displayed messages by timestamp**
+  sortDisplayedMessagesByTimestamp();
+  
   // ✅ **FIX: Reset currentPage when applying filters**
   currentPage = 1;
   renderCurrentPage();
   updatePaginationInfo();
+  
+  // ✅ **FIX: Scroll to top after applying filters**
+  setTimeout(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    console.log('🔼 Scrolled to top after applying filters');
+  }, 50);
   
   // Save state after filtering
   setTimeout(saveCurrentState, 100);
@@ -1985,6 +2062,7 @@ function renderCurrentPage() {
     return;
   }
   
+  // ✅ **FIX: Display messages in correct order (newest first)**
   messagesToShow.forEach(message => addMessageCard(message));
   
   // Show pagination controls
@@ -2026,7 +2104,7 @@ function addMessageCard(message) {
   const senderDisplay = message.sender || "-";
   const receiverDisplay = message.receiverNumber || "-";
   const deviceId = message.uniqueid || "N/A";
-  const messageTimestamp = message.timestamp || Date.now();
+  const messageTimestamp = getMessageTimestamp(message); // ✅ Use proper timestamp
   
   // Calculate word and character counts
   const wordCount = messageBody.split(/\s+/).filter(word => word.length > 0).length;
@@ -2035,7 +2113,7 @@ function addMessageCard(message) {
   card.innerHTML = `
     <div class="message-header">
       <div class="message-title-container">
-        <div class="message-date">${formatDate(message.timestamp)}</div>
+        <div class="message-date">${formatDate(messageTimestamp)}</div>
         ${message.isLive ? '<span class="live-badge-small">LIVE</span>' : ''}
         ${isBanking ? '<span class="banking-badge">BANKING</span>' : ''}
       </div>
@@ -2083,7 +2161,7 @@ function addMessageCard(message) {
     <div class="message-footer">
       <div class="message-time">
         <i class="fas fa-clock"></i>
-        ${message.isLive ? 'Received Live • ' : ''}${formatTime(message.timestamp)}
+        ${message.isLive ? 'Received Live • ' : ''}${formatTime(messageTimestamp)}
       </div>
       <div class="message-stats">
         <div class="message-stat-item">
@@ -2278,6 +2356,8 @@ async function fetchAllMessages() {
     
     if (data.success && data.data) {
       // Process all messages from database
+      const processedMessages = [];
+      
       data.data.forEach(msg => {
         if (msg._id) processedIds.add(msg._id);
         if (msg.id) processedIds.add(msg.id);
@@ -2304,18 +2384,24 @@ async function fetchAllMessages() {
         }
         
         msg.isLive = false;
+        msg.timestamp = getMessageTimestamp(msg); // ✅ Get proper timestamp
+        
+        processedMessages.push(msg);
       });
       
-      // Sort messages by timestamp (newest first)
-      allMessages = data.data.sort((a, b) => {
-        const timeA = new Date(a.timestamp || a.createdAt || a.time || Date.now()).getTime();
-        const timeB = new Date(b.timestamp || b.createdAt || b.time || Date.now()).getTime();
+      // ✅ **CRITICAL FIX: Sort messages by timestamp (newest first)**
+      allMessages = processedMessages.sort((a, b) => {
+        const timeA = getMessageTimestamp(a);
+        const timeB = getMessageTimestamp(b);
+        console.log(`🔍 Sorting: Message A timestamp: ${timeA} (${formatDate(timeA)}), Message B timestamp: ${timeB} (${formatDate(timeB)})`);
         return timeB - timeA; // Newest first
       });
       
       console.log(`✅ Total messages loaded: ${allMessages.length}`);
-      console.log(`✅ First message timestamp: ${allMessages[0] ? formatDate(allMessages[0].timestamp) : 'None'}`);
-      console.log(`✅ Last message timestamp: ${allMessages[allMessages.length - 1] ? formatDate(allMessages[allMessages.length - 1].timestamp) : 'None'}`);
+      if (allMessages.length > 0) {
+        console.log(`✅ First message (newest): ${formatDate(allMessages[0].timestamp)}`);
+        console.log(`✅ Last message (oldest): ${formatDate(allMessages[allMessages.length - 1].timestamp)}`);
+      }
       
       // ✅ **FIX: Reset currentPage to 1 when loading fresh data**
       currentPage = 1;
@@ -2329,6 +2415,12 @@ async function fetchAllMessages() {
       
       // ✅ **FIX: Apply filters which will render the page**
       applyFilters();
+      
+      // ✅ **FIX: Scroll to top after loading messages**
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        console.log('🔼 Scrolled to top after loading all messages');
+      }, 200);
       
     } else {
       console.log('⚠️ No data or success false:', data);
@@ -2355,11 +2447,14 @@ async function fetchAllMessages() {
       console.log(`✅ Pagination enabled - Filtered: ${displayedMessages.length}, Page Size: ${PAGE_SIZE}`);
     }
     
-    // Restore scroll position after rendering (if not complete refresh)
-    if (!isCompleteRefresh() && scrollPosition > 0) {
+    // ✅ **FIX: Only restore scroll position for back/forward navigation, NOT for refresh**
+    const perfEntries = performance.getEntriesByType("navigation");
+    const isBackForward = perfEntries.length > 0 && perfEntries[0].type === 'back_forward';
+    
+    if (isBackForward && scrollPosition > 0) {
       setTimeout(() => {
         window.scrollTo(0, scrollPosition);
-        console.log('📍 Scroll position restored:', scrollPosition);
+        console.log('📍 Scroll position restored for back/forward navigation:', scrollPosition);
       }, 300);
     }
     
@@ -2395,12 +2490,8 @@ async function fetchAllMessages() {
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible') {
     // User came back from another tab/window or device details
-    const savedState = loadSavedState();
-    if (savedState && savedState.scrollPosition) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedState.scrollPosition));
-      }, 100);
-    }
+    console.log('🔍 Page became visible, checking for updates...');
+    // We can optionally refresh messages here
   }
 });
 
@@ -2416,14 +2507,32 @@ window.addEventListener('pageshow', function(event) {
   if (event.persisted) {
     // Page was restored from bfcache
     console.log('🔄 Page restored from bfcache');
-  } else if (isCompleteRefresh()) {
-    // Complete refresh - clear state
-    clearState();
+    // Don't scroll to top for bfcache
+  } else {
+    // Check if this is a refresh
+    const perfEntries = performance.getEntriesByType("navigation");
+    const isRefresh = perfEntries.length > 0 && 
+                     (perfEntries[0].type === 'reload' || perfEntries[0].type === 'navigate');
+    
+    if (isRefresh) {
+      console.log('🔄 Complete refresh detected, going to top');
+      // Force scroll to top on refresh
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 100);
+    }
   }
 });
 
 /* ===== INITIALIZATION ===== */
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Page loaded, initializing...');
+  
+  // ✅ **FIX: Immediately scroll to top on page load**
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  
   // Setup navigation first
   setupNavigation();
   
@@ -2459,7 +2568,16 @@ document.addEventListener('DOMContentLoaded', function() {
   
   initSocket();
   
+  // Auto-save state every 5 seconds
   setInterval(saveCurrentState, 5000);
+  
+  // Extra scroll to top after page is fully loaded
+  setTimeout(() => {
+    if (window.scrollY > 100) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      console.log('🔼 Extra scroll to top after page load');
+    }
+  }, 1000);
 });
 
 function refreshMessages() {
